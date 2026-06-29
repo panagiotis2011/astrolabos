@@ -1765,19 +1765,19 @@ import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut as fbSignOut,
          createUserWithEmailAndPassword, signInWithEmailAndPassword,
+         sendEmailVerification,
          GoogleAuthProvider, signInWithPopup }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 // ── Firebase Config — αντικατέστησε με τα δικά σου ──
 const firebaseConfig = {
-  apiKey: "AIzaSyAV4gTr0sCv2md_7H_0XtifvFpIE5-Wnfo",
-  authDomain: "astrolabos-ekp.firebaseapp.com",
-  projectId: "astrolabos-ekp",
-  storageBucket: "astrolabos-ekp.firebasestorage.app",
-  messagingSenderId: "429299206359",
-  appId: "1:429299206359:web:a156f90f3c9df246ca8892"
+  apiKey:            "ΒΑΛΕ_ΕΔΩ_ΤΟ_apiKey",
+  authDomain:        "ΒΑΛΕ_ΕΔΩ_ΤΟ_authDomain",
+  projectId:         "ΒΑΛΕ_ΕΔΩ_ΤΟ_projectId",
+  storageBucket:     "ΒΑΛΕ_ΕΔΩ_ΤΟ_storageBucket",
+  messagingSenderId: "ΒΑΛΕ_ΕΔΩ_ΤΟ_messagingSenderId",
+  appId:             "ΒΑΛΕ_ΕΔΩ_ΤΟ_appId"
 };
-
 
 const app      = initializeApp(firebaseConfig);
 const auth     = getAuth(app);
@@ -1804,8 +1804,26 @@ window.emailLogin = async () => {
   const pass  = document.getElementById('loginPass').value;
   const err   = document.getElementById('loginErr');
   err.textContent = '';
-  try { await signInWithEmailAndPassword(auth, email, pass); }
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, pass);
+    if (!cred.user.emailVerified) {
+      await fbSignOut(auth);
+      err.innerHTML = `Το email δεν έχει επιβεβαιωθεί ακόμα.<br>
+        <a href="#" onclick="resendVerification('${email}','${pass}')" 
+           style="color:var(--gold2);">Αποστολή νέου link</a>`;
+    }
+  }
   catch(e) { err.textContent = greekErr(e.code); }
+};
+
+window.resendVerification = async (email, pass) => {
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, pass);
+    await sendEmailVerification(cred.user);
+    await fbSignOut(auth);
+    document.getElementById('loginErr').innerHTML =
+      '<span style="color:#4ecf8a;">✓ Νέο link στάλθηκε στο email σου.</span>';
+  } catch(e) { document.getElementById('loginErr').textContent = greekErr(e.code); }
 };
 
 window.emailRegister = async () => {
@@ -1813,7 +1831,27 @@ window.emailRegister = async () => {
   const pass  = document.getElementById('regPass').value;
   const err   = document.getElementById('regErr');
   err.textContent = '';
-  try { await createUserWithEmailAndPassword(auth, email, pass); }
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pass);
+    // Στέλνουμε email επιβεβαίωσης
+    await sendEmailVerification(cred.user);
+    // Αποσυνδέουμε μέχρι να επιβεβαιώσει
+    await fbSignOut(auth);
+    // Εμφανίζουμε μήνυμα
+    document.getElementById('auth-register').innerHTML = `
+      <div style="background:#0a2a14;border:1px solid #2a7a40;border-radius:10px;padding:20px;text-align:center;line-height:1.8;">
+        <div style="font-size:2rem;margin-bottom:8px;">📧</div>
+        <strong style="color:#4ecf8a;font-size:1.05rem;">Έλεγξε το email σου!</strong><br>
+        <span style="color:var(--text2);font-size:.92rem;">
+          Στάλθηκε σύνδεσμος επιβεβαίωσης στο<br>
+          <strong style="color:var(--text);">${email}</strong><br><br>
+          Κλικ στο link και μετά συνδέσου από εδώ.
+        </span>
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="authTab('login')">
+          Πήγαινε στη Σύνδεση
+        </button>
+      </div>`;
+  }
   catch(e) { err.textContent = greekErr(e.code); }
 };
 

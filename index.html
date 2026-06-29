@@ -1757,12 +1757,18 @@ function updateStep5(d){
     </table>`;
 }
 
+</script>
+
 <!-- ══════════ FIREBASE AUTH ══════════ -->
 <script type="module">
-// ─────────────────────────────────────────────────────────
-// FIREBASE CONFIG — αντικατέστησε με τα δικά σου στοιχεία
-// από: Firebase Console → Project Settings → Your apps → Web
-// ─────────────────────────────────────────────────────────
+import { initializeApp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut as fbSignOut,
+         createUserWithEmailAndPassword, signInWithEmailAndPassword,
+         GoogleAuthProvider, signInWithPopup }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+// ── Firebase Config — αντικατέστησε με τα δικά σου ──
 const firebaseConfig = {
   apiKey: "AIzaSyAV4gTr0sCv2md_7H_0XtifvFpIE5-Wnfo",
   authDomain: "astrolabos-ekp.firebaseapp.com",
@@ -1773,95 +1779,73 @@ const firebaseConfig = {
 };
 
 
-import { initializeApp }          from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut as fbSignOut,
-         createUserWithEmailAndPassword, signInWithEmailAndPassword,
-         GoogleAuthProvider, signInWithPopup }
-  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-
 const app      = initializeApp(firebaseConfig);
 const auth     = getAuth(app);
 const provider = new GoogleAuthProvider();
 
-// ── Παρακολούθηση κατάστασης σύνδεσης ──
+// ── Κατάσταση σύνδεσης ──
 onAuthStateChanged(auth, user => {
   if (user) {
-    // Συνδεδεμένος
     document.getElementById('authOverlay').style.display = 'none';
-    const badge = document.getElementById('userBadge');
-    badge.style.display = 'flex';
+    document.getElementById('userBadge').style.display   = 'flex';
     document.getElementById('userName').textContent =
       user.displayName || user.email.split('@')[0];
     const photo = document.getElementById('userPhoto');
-    if (user.photoURL) {
-      photo.src = user.photoURL;
-      photo.style.display = 'block';
-    }
+    if (user.photoURL) { photo.src = user.photoURL; photo.style.display = 'block'; }
   } else {
-    // Αποσυνδεδεμένος
     document.getElementById('authOverlay').style.display = 'flex';
     document.getElementById('userBadge').style.display   = 'none';
   }
 });
 
-// ── Auth functions (global για να τις βλέπει το HTML) ──
-window.emailLogin = async function() {
+// ── Global functions (window.X για να δουλεύουν τα onclick) ──
+window.emailLogin = async () => {
   const email = document.getElementById('loginEmail').value.trim();
   const pass  = document.getElementById('loginPass').value;
   const err   = document.getElementById('loginErr');
   err.textContent = '';
-  try {
-    await signInWithEmailAndPassword(auth, email, pass);
-  } catch(e) {
-    err.textContent = greekAuthError(e.code);
-  }
+  try { await signInWithEmailAndPassword(auth, email, pass); }
+  catch(e) { err.textContent = greekErr(e.code); }
 };
 
-window.emailRegister = async function() {
+window.emailRegister = async () => {
   const email = document.getElementById('regEmail').value.trim();
   const pass  = document.getElementById('regPass').value;
   const err   = document.getElementById('regErr');
   err.textContent = '';
-  try {
-    await createUserWithEmailAndPassword(auth, email, pass);
-  } catch(e) {
-    err.textContent = greekAuthError(e.code);
-  }
+  try { await createUserWithEmailAndPassword(auth, email, pass); }
+  catch(e) { err.textContent = greekErr(e.code); }
 };
 
-window.googleLogin = async function() {
-  try {
-    await signInWithPopup(auth, provider);
-  } catch(e) {
-    document.getElementById('loginErr').textContent = greekAuthError(e.code);
-  }
+window.googleLogin = async () => {
+  const err = document.getElementById('loginErr');
+  err.textContent = '';
+  try { await signInWithPopup(auth, provider); }
+  catch(e) { err.textContent = greekErr(e.code); }
 };
 
-window.signOut = async function() {
-  await fbSignOut(auth);
-};
+window.signOut = async () => { await fbSignOut(auth); };
 
-function greekAuthError(code) {
-  const msgs = {
-    'auth/invalid-email':          'Μη έγκυρο email.',
-    'auth/user-not-found':         'Δεν βρέθηκε λογαριασμός με αυτό το email.',
-    'auth/wrong-password':         'Λάθος κωδικός.',
-    'auth/email-already-in-use':   'Αυτό το email χρησιμοποιείται ήδη.',
-    'auth/weak-password':          'Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.',
-    'auth/popup-closed-by-user':   'Το παράθυρο Google έκλεισε.',
-    'auth/too-many-requests':      'Πολλές αποτυχημένες προσπάθειες. Δοκίμασε αργότερα.',
-    'auth/network-request-failed': 'Πρόβλημα σύνδεσης. Έλεγξε το internet.',
-  };
-  return msgs[code] || `Σφάλμα: ${code}`;
-}
-
-// ── Auth tab switching ──
-window.authTab = function(name) {
+window.authTab = (name) => {
   document.querySelectorAll('.auth-tab').forEach((t,i) =>
-    t.classList.toggle('active', (i===0&&name==='login')||(i===1&&name==='register')));
-  document.querySelectorAll('.auth-pane').forEach(p => p.classList.remove('active'));
+    t.classList.toggle('active',(i===0&&name==='login')||(i===1&&name==='register')));
+  document.querySelectorAll('.auth-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('auth-'+name).classList.add('active');
 };
+
+function greekErr(code) {
+  return ({
+    'auth/invalid-email':        'Μη έγκυρο email.',
+    'auth/user-not-found':       'Δεν βρέθηκε λογαριασμός.',
+    'auth/wrong-password':       'Λάθος κωδικός.',
+    'auth/invalid-credential':   'Λάθος email ή κωδικός.',
+    'auth/email-already-in-use': 'Το email χρησιμοποιείται ήδη.',
+    'auth/weak-password':        'Κωδικός τουλάχιστον 6 χαρακτήρες.',
+    'auth/popup-closed-by-user': 'Το παράθυρο Google έκλεισε.',
+    'auth/too-many-requests':    'Πολλές προσπάθειες. Δοκίμασε αργότερα.',
+    'auth/network-request-failed':'Πρόβλημα σύνδεσης internet.',
+  })[code] || `Σφάλμα: ${code}`;
+}
 </script>
 
 </body>

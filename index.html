@@ -501,7 +501,7 @@ select option{background:#071625;}
         Σύνδεση με Google
       </button>
       <div class="auth-err" id="loginErr"></div>
-      <div class="auth-switch">Δεν έχεις λογαριασμό; <a onclick="authTab('register')">Εγγραφή</a></div>
+      <div class="auth-switch">Δεν έχεις λογαριασμό; <a onclick="authTab('register')">Εγγραφή</a> &nbsp;|&nbsp; <a onclick="forgotPassword()">Ξέχασα τον κωδικό</a></div>
     </div>
 
     <!-- Register -->
@@ -1233,6 +1233,35 @@ function calculate(){
   const utcOffset = dstOn ? 3 : 2;
   const corr = computeCorrection(dateStr);
 
+  // ── Υπολογισμός σταθεράς C_date από τα τοπικά μεσάνυχτα ──
+  // τοπική ώρα = ccwDeg/15 + C_date
+  // C_date = (0 - ccw_midnight/15 + 24) % 24
+  const utcH_midnight = ((0 - utcOffset) % 24 + 24) % 24;
+  const jd_midnight   = base_jd + utcH_midnight / 24.0;
+
+  function computeCCW(posP, posD, posM) {
+    // position angle Dubhe από Πολικό
+    function posAngleCalc(fromAlt, fromAz, toAlt, toAz) {
+      const f = fromAlt*Math.PI/180, t = toAlt*Math.PI/180;
+      const dAz = (toAz - fromAz)*Math.PI/180;
+      const sinPA = Math.cos(t)*Math.sin(dAz);
+      const cosPA = Math.sin(t)*Math.cos(f) - Math.cos(t)*Math.sin(f)*Math.cos(dAz);
+      let pa = Math.atan2(sinPA,cosPA)*180/Math.PI;
+      return ((pa%360)+360)%360;
+    }
+    const pa  = posAngleCalc(posP.alt, posP.az, posD.alt, posD.az);
+    return (360 - pa + 360) % 360;
+  }
+
+  const posP_mid = raDecToAltAz(STARS.polaris.ra, STARS.polaris.dec, locState.lat, locState.lon,
+                    new Date(new Date(dateStr+'T00:00:00Z').getTime() + utcH_midnight*3600000));
+  const posD_mid = raDecToAltAz(STARS.dubhe.ra,   STARS.dubhe.dec,   locState.lat, locState.lon,
+                    new Date(new Date(dateStr+'T00:00:00Z').getTime() + utcH_midnight*3600000));
+  const posM_mid = raDecToAltAz(STARS.merak.ra,   STARS.merak.dec,   locState.lat, locState.lon,
+                    new Date(new Date(dateStr+'T00:00:00Z').getTime() + utcH_midnight*3600000));
+  const ccw_midnight = computeCCW(posP_mid, posD_mid, posM_mid);
+  const C_date = ((0 - ccw_midnight/15) % 24 + 24) % 24;
+
   const HOURS = [20,21,22,23,0,1];
   hourData = HOURS.map(h=>{
     const addDay = h<5 ? 86400000 : 0;
@@ -1243,37 +1272,18 @@ function calculate(){
     const posD = raDecToAltAz(STARS.dubhe.ra,   STARS.dubhe.dec,   locState.lat, locState.lon, jsDate);
     const posM = raDecToAltAz(STARS.merak.ra,   STARS.merak.dec,   locState.lat, locState.lon, jsDate);
 
-    // ── Γωνία δείκτη με κορυφή τον ΠΟΛΙΚΟ ──
-    // Χρησιμοποιούμε position angle (PA) στη σφαιρική αστρονομία:
-    // PA = γωνία από Βορρά (ζενίθ), μετρημένη ανατολικά (CW στον ουρανό)
-    // Η δική μας γωνία = αντιωρολογιακά (CCW) = 360 - PA
-
-    // PA του Dubhe ως προς τον Πολικό (σφαιρική τριγωνομετρία)
-    function posAngle(fromAlt, fromAz, toAlt, toAz) {
-      // Position angle: γωνία από ζενίθ (Βορρά) προς τον toStar, CW
-      const f = fromAlt * Math.PI/180, t = toAlt * Math.PI/180;
-      const dAz = (toAz - fromAz) * Math.PI/180;
-      const sinPA = Math.cos(t) * Math.sin(dAz);
-      const cosPA = Math.sin(t) * Math.cos(f) - Math.cos(t) * Math.sin(f) * Math.cos(dAz);
-      let pa = Math.atan2(sinPA, cosPA) * 180/Math.PI;
-      return ((pa % 360) + 360) % 360; // 0–360, CW από ζενίθ
+    // Position angle Dubhe από Πολικό (ίδια συνάρτηση με computeCCW)
+    function posAngleH(fromAlt, fromAz, toAlt, toAz) {
+      const f=fromAlt*Math.PI/180, t=toAlt*Math.PI/180;
+      const dAz=(toAz-fromAz)*Math.PI/180;
+      const sinPA=Math.cos(t)*Math.sin(dAz);
+      const cosPA=Math.sin(t)*Math.cos(f)-Math.cos(t)*Math.sin(f)*Math.cos(dAz);
+      let pa=Math.atan2(sinPA,cosPA)*180/Math.PI;
+      return ((pa%360)+360)%360;
     }
-
-    // PA του Dubhe από τον Πολικό (CW από ζενίθ = ωρολογιακά)
-    const paDubhe = posAngle(posP.alt, posP.az, posD.alt, posD.az);
-    // Η γωνία του οργάνου = PA αντιωρολογιακά = 360 - PA
-    // ΑΛΛ΄ αν PA < 180: Dubhe είναι δεξιά (Α) της κατακόρυφου
-    //     αν PA > 180: Dubhe είναι αριστερά (Δ)
-    // Η γωνία του αστρολάβου μετριέται CCW από ζενίθ → paDubhe (CW) → CCW = 360 - paDubhe
-    // Για ώρα 0:00: δείκτης πάνω (ζενίθ) → γωνία=0°
-    // Για ώρα 6:00: δείκτης αριστερά → CW=270° → CCW=90°... 
-    // Στον ουρανό: CW (ανατολικά) = αύξηση ώρας
-    // Άρα: ώρα ∝ PA (CW), και CCW = 360-PA για εμφάνιση
-
-    // Κρατάμε PA (CW) για υπολογισμό ώρας, CCW για εμφάνιση
-    const ccwDeg = (360 - paDubhe) % 360;  // για εμφάνιση στον χάρτη
-    // Ώρα: PA/15 + διόρθωση
-    const calcTime = ((paDubhe/15 + corr.corrH) % 24 + 24) % 24;
+    const pa     = posAngleH(posP.alt, posP.az, posD.alt, posD.az);
+    const ccwDeg = (360 - pa + 360) % 360;
+    const calcTime = ((ccwDeg/15 + C_date) % 24 + 24) % 24;
 
     return {hour:h, jsDate, posP, posD, posM, ccwDeg:Math.round(ccwDeg), calcTime};
   });
@@ -1765,7 +1775,7 @@ import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut as fbSignOut,
          createUserWithEmailAndPassword, signInWithEmailAndPassword,
-         sendEmailVerification,
+         sendEmailVerification, sendPasswordResetEmail,
          GoogleAuthProvider, signInWithPopup }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
@@ -1863,6 +1873,25 @@ window.googleLogin = async () => {
 };
 
 window.signOut = async () => { await fbSignOut(auth); };
+
+window.forgotPassword = async () => {
+  const email = document.getElementById('loginEmail').value.trim();
+  const err   = document.getElementById('loginErr');
+  if (!email) {
+    err.innerHTML = '<span style="color:#f0a040;">Γράψε πρώτα το email σου παραπάνω.</span>';
+    document.getElementById('loginEmail').focus();
+    return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, email);
+    err.innerHTML = `<span style="color:#4ecf8a;">
+      ✓ Στάλθηκε email επαναφοράς κωδικού στο <strong>${email}</strong>.<br>
+      Έλεγξε και τον φάκελο Spam αν δεν το βρεις.
+    </span>`;
+  } catch(e) {
+    err.textContent = greekErr(e.code);
+  }
+};
 
 window.authTab = (name) => {
   document.querySelectorAll('.auth-tab').forEach((t,i) =>

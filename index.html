@@ -1237,52 +1237,35 @@ function calculate(){
   // τοπική ώρα = ccwDeg/15 + C_date
   // C_date = (0 - ccw_midnight/15 + 24) % 24
   const utcH_midnight = ((0 - utcOffset) % 24 + 24) % 24;
-  const jd_midnight   = base_jd + utcH_midnight / 24.0;
+  const baseMs        = new Date(dateStr+'T00:00:00Z').getTime();
+  const midnightDate  = new Date(baseMs + utcH_midnight*3600000);
 
-  function computeCCW(posP, posD, posM) {
-    // position angle Dubhe από Πολικό
-    function posAngleCalc(fromAlt, fromAz, toAlt, toAz) {
-      const f = fromAlt*Math.PI/180, t = toAlt*Math.PI/180;
-      const dAz = (toAz - fromAz)*Math.PI/180;
-      const sinPA = Math.cos(t)*Math.sin(dAz);
-      const cosPA = Math.sin(t)*Math.cos(f) - Math.cos(t)*Math.sin(f)*Math.cos(dAz);
-      let pa = Math.atan2(sinPA,cosPA)*180/Math.PI;
-      return ((pa%360)+360)%360;
-    }
-    const pa  = posAngleCalc(posP.alt, posP.az, posD.alt, posD.az);
-    return (360 - pa + 360) % 360;
+  function posAngleStars(fromP, toP) {
+    const f=fromP.alt*Math.PI/180, t=toP.alt*Math.PI/180;
+    const dAz=(toP.az-fromP.az)*Math.PI/180;
+    const sinPA=Math.cos(t)*Math.sin(dAz);
+    const cosPA=Math.sin(t)*Math.cos(f)-Math.cos(t)*Math.sin(f)*Math.cos(dAz);
+    return ((Math.atan2(sinPA,cosPA)*180/Math.PI)%360+360)%360;
   }
 
-  const posP_mid = raDecToAltAz(STARS.polaris.ra, STARS.polaris.dec, locState.lat, locState.lon,
-                    new Date(new Date(dateStr+'T00:00:00Z').getTime() + utcH_midnight*3600000));
-  const posD_mid = raDecToAltAz(STARS.dubhe.ra,   STARS.dubhe.dec,   locState.lat, locState.lon,
-                    new Date(new Date(dateStr+'T00:00:00Z').getTime() + utcH_midnight*3600000));
-  const posM_mid = raDecToAltAz(STARS.merak.ra,   STARS.merak.dec,   locState.lat, locState.lon,
-                    new Date(new Date(dateStr+'T00:00:00Z').getTime() + utcH_midnight*3600000));
-  const ccw_midnight = computeCCW(posP_mid, posD_mid, posM_mid);
-  const C_date = ((0 - ccw_midnight/15) % 24 + 24) % 24;
+  const posP_mid = raDecToAltAz(STARS.polaris.ra,STARS.polaris.dec,locState.lat,locState.lon,midnightDate);
+  const posD_mid = raDecToAltAz(STARS.dubhe.ra,  STARS.dubhe.dec,  locState.lat,locState.lon,midnightDate);
+  const pa_mid   = posAngleStars(posP_mid, posD_mid);
+  const ccw_mid  = (360 - pa_mid + 360) % 360;
+  const C_date   = ((0 - ccw_mid/15) % 24 + 24) % 24;
 
   const HOURS = [20,21,22,23,0,1];
   hourData = HOURS.map(h=>{
-    const addDay = h<5 ? 86400000 : 0;
-    const utcH = ((h-utcOffset)%24+24)%24;
-    const jsDate = new Date(new Date(dateStr+'T00:00:00Z').getTime() + addDay + utcH*3600000);
+    const addDay  = h < 5 ? 86400000 : 0;
+    const utcH    = ((h - utcOffset) % 24 + 24) % 24;
+    const jsDate  = new Date(baseMs + addDay + utcH*3600000);
 
-    const posP = raDecToAltAz(STARS.polaris.ra, STARS.polaris.dec, locState.lat, locState.lon, jsDate);
-    const posD = raDecToAltAz(STARS.dubhe.ra,   STARS.dubhe.dec,   locState.lat, locState.lon, jsDate);
-    const posM = raDecToAltAz(STARS.merak.ra,   STARS.merak.dec,   locState.lat, locState.lon, jsDate);
+    const posP = raDecToAltAz(STARS.polaris.ra,STARS.polaris.dec,locState.lat,locState.lon,jsDate);
+    const posD = raDecToAltAz(STARS.dubhe.ra,  STARS.dubhe.dec,  locState.lat,locState.lon,jsDate);
+    const posM = raDecToAltAz(STARS.merak.ra,  STARS.merak.dec,  locState.lat,locState.lon,jsDate);
 
-    // Position angle Dubhe από Πολικό (ίδια συνάρτηση με computeCCW)
-    function posAngleH(fromAlt, fromAz, toAlt, toAz) {
-      const f=fromAlt*Math.PI/180, t=toAlt*Math.PI/180;
-      const dAz=(toAz-fromAz)*Math.PI/180;
-      const sinPA=Math.cos(t)*Math.sin(dAz);
-      const cosPA=Math.sin(t)*Math.cos(f)-Math.cos(t)*Math.sin(f)*Math.cos(dAz);
-      let pa=Math.atan2(sinPA,cosPA)*180/Math.PI;
-      return ((pa%360)+360)%360;
-    }
-    const pa     = posAngleH(posP.alt, posP.az, posD.alt, posD.az);
-    const ccwDeg = (360 - pa + 360) % 360;
+    const pa      = posAngleStars(posP, posD);
+    const ccwDeg  = (360 - pa + 360) % 360;
     const calcTime = ((ccwDeg/15 + C_date) % 24 + 24) % 24;
 
     return {hour:h, jsDate, posP, posD, posM, ccwDeg:Math.round(ccwDeg), calcTime};

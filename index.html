@@ -960,9 +960,13 @@ let currentHour = 21;
 let hourData = [];
 
 // ── Init ──
-(function init(){
-  populateCountries();
-  populateDateSelects();
+function runInit(){
+  try {
+    populateCountries();
+  } catch(e){ console.error('populateCountries failed:', e); }
+  try {
+    populateDateSelects();
+  } catch(e){ console.error('populateDateSelects failed:', e); }
   const saved = localStorage.getItem('astrolab_location');
   if(saved){
     try{
@@ -974,7 +978,12 @@ let hourData = [];
   } else {
     showSetup();
   }
-})();
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', runInit);
+} else {
+  runInit();
+}
 
 function showSetup(){
   document.getElementById('locationSetup').style.display='flex';
@@ -1018,7 +1027,7 @@ function populateCountries(){
 function onCountryChange(){
   const code = document.getElementById('countrySelect').value;
   const citysel = document.getElementById('citySelect');
-  citysel.innerHTML='';
+  citysel.innerHTML='<option value="" disabled selected>— Επέλεξε πόλη —</option>';
   const sortedCities = [...CITIES_DB[code].cities].sort((a,b)=>
     a.name.localeCompare(b.name, 'el'));
   sortedCities.forEach(c=>{
@@ -1031,6 +1040,10 @@ function onCountryChange(){
 
 function saveFromList(){
   const raw = document.getElementById('citySelect').value;
+  if(!raw){
+    alert('Παρακαλώ επέλεξε πρώτα μια πόλη.');
+    return;
+  }
   const c = JSON.parse(raw);
   saveLocation(c.lat, c.lon, c.name);
 }

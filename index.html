@@ -229,6 +229,15 @@ select option{background:#071625;}
 .date-row{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:end;}
 @media(max-width:480px){.date-row{grid-template-columns:1fr;}}
 
+.date-select-row{
+  display:grid;
+  grid-template-columns:1fr 1.6fr 1fr;
+  gap:8px;
+}
+@media(max-width:420px){
+  .date-select-row{grid-template-columns:1fr 1fr 1fr;}
+}
+
 .dst-toggle{
   display:flex;align-items:center;gap:10px;
   background:#071625;border:1px solid var(--border);
@@ -599,8 +608,13 @@ select option{background:#071625;}
   <div class="card">
     <div class="card-title">Παράμετροι</div>
     <label class="field-label">Ημερομηνία παρατήρησης</label>
-    <div class="date-row">
-      <input type="date" id="datePicker">
+    <div class="date-select-row">
+      <select id="daySelect" aria-label="Ημέρα"></select>
+      <select id="monthSelect" aria-label="Μήνας"></select>
+      <select id="yearSelect" aria-label="Έτος"></select>
+    </div>
+    <div class="date-row" style="margin-top:14px;">
+      <div></div>
       <div class="dst-toggle" id="dstToggle" onclick="toggleDST()">
         <label class="dst-toggle" style="cursor:pointer;display:flex;align-items:center;gap:10px;border:none;padding:0;background:none;margin-top:0;">
           <div class="dst-pill"></div>
@@ -939,7 +953,7 @@ let hourData = [];
 // ── Init ──
 (function init(){
   populateCountries();
-  setDefaultDate();
+  populateDateSelects();
   const saved = localStorage.getItem('astrolab_location');
   if(saved){
     try{
@@ -1073,19 +1087,65 @@ function updateLocationBadge(){
 // ═══════════════════════════════════════════════
 // DATE & DST
 // ═══════════════════════════════════════════════
-function setDefaultDate(){
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('datePicker').value = today;
+const MONTH_NAMES = ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος',
+                      'Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
+
+function daysInMonth(month, year){ return new Date(year, month, 0).getDate(); }
+
+function populateDateSelects(){
+  const today = new Date();
+  const daySel   = document.getElementById('daySelect');
+  const monthSel = document.getElementById('monthSelect');
+  const yearSel  = document.getElementById('yearSelect');
+
+  // Μήνες
+  monthSel.innerHTML = MONTH_NAMES.map((m,i)=>
+    `<option value="${i+1}">${m}</option>`).join('');
+
+  // Έτη: τρέχον ±2
+  const curYear = today.getFullYear();
+  yearSel.innerHTML = '';
+  for(let y=curYear-1; y<=curYear+2; y++){
+    yearSel.innerHTML += `<option value="${y}">${y}</option>`;
+  }
+
+  // Ημέρες (εξαρτώνται από μήνα/έτος)
+  function refreshDays(){
+    const m = parseInt(monthSel.value), y = parseInt(yearSel.value);
+    const dim = daysInMonth(m, y);
+    const prevDay = parseInt(daySel.value) || today.getDate();
+    daySel.innerHTML = '';
+    for(let d=1; d<=dim; d++){
+      daySel.innerHTML += `<option value="${d}">${d}</option>`;
+    }
+    daySel.value = Math.min(prevDay, dim);
+  }
+
+  monthSel.value = today.getMonth()+1;
+  yearSel.value  = curYear;
+  refreshDays();
+  daySel.value = today.getDate();
+
+  monthSel.addEventListener('change', ()=>{ refreshDays(); autoDetectDST(); });
+  yearSel.addEventListener('change',  ()=>{ refreshDays(); autoDetectDST(); });
+  daySel.addEventListener('change',   autoDetectDST);
+}
+
+function getDateStr(){
+  const d = document.getElementById('daySelect').value.padStart(2,'0');
+  const m = document.getElementById('monthSelect').value.padStart(2,'0');
+  const y = document.getElementById('yearSelect').value;
+  return `${y}-${m}-${d}`;
 }
 
 function autoDetectDST(){
-  const dateStr = document.getElementById('datePicker').value;
+  const dateStr = getDateStr();
   if(!dateStr) return;
   dstOn = isGreekDST(dateStr);
   updateDSTUI();
 }
 
-document.getElementById('datePicker').addEventListener('change', autoDetectDST);
+
 
 function toggleDST(){
   dstOn = !dstOn;
@@ -1226,7 +1286,7 @@ function computeCorrection(dateStr){
 // MAIN CALCULATE
 // ═══════════════════════════════════════════════
 function calculate(){
-  const dateStr = document.getElementById('datePicker').value;
+  const dateStr = getDateStr();
   if(!dateStr){ alert('Επίλεξε ημερομηνία'); return; }
   if(locState.lat==null){ alert('Επίλεξε πρώτα τοποθεσία'); return; }
 
@@ -1321,7 +1381,12 @@ function renderResults(corr, utcOff){
         </div>
       </div>
     </div>
-    <div class="step"><div class="step-n">6</div><div class="step-t">Λαμβάνω υπόψη: αστρική vs ηλιακή ημέρα (~4λ/νύχτα), εξίσωση χρόνου (±16λ), ζώνη ώρας UTC+${utcOff}.</div></div>
+    <div class="step"><div class="step-n">6</div><div class="step-t">
+      <strong>Πηγές απόκλισης από το ρολόι:</strong><br>
+      • Η ζώνη ώρας <strong>UTC+${utcOff}</strong> ${utcOff===3?'(θερινή)':'(χειμερινή)'} λαμβάνεται υπόψη στον υπολογισμό.<br>
+      • Η <strong>εξίσωση χρόνου</strong> (έως ±16 λεπτά, λόγω της ελλειπτικής τροχιάς της Γης) <em>δεν διορθώνεται</em> — μπορεί να εξηγεί μικρή απόκλιση.<br>
+      • Σφάλματα στην <strong>παρατήρηση της γωνίας</strong> (π.χ. ±5°) μεταφράζονται σε ±20 λεπτά απόκλιση.
+    </div></div>
   `;
 
   renderHoursGrid();

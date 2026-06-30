@@ -483,7 +483,92 @@ select option{background:#071625;color:#ddeeff;}
   border-radius:4px;transition:.15s;
 }
 #signOutBtn:hover{color:var(--red);}
+#journalBtn{
+  background:none;border:none;color:var(--text2);
+  font-size:1.1rem;cursor:pointer;padding:2px 6px;
+  border-radius:4px;transition:.15s;
+}
+#journalBtn:hover{color:var(--gold);transform:scale(1.1);}
+
+/* ── JOURNAL OVERLAY ── */
+#journalOverlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(5,16,30,.96);
+  z-index:150;align-items:center;justify-content:center;
+  padding:16px;
+}
+.journal-box{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;
+  max-width:560px;width:100%;max-height:80vh;
+  overflow-y:auto;
+}
+.journal-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:6px;
+}
+.journal-header h2{
+  font-family:'Cinzel',serif;font-size:1.3rem;color:var(--gold);
+}
+.journal-close{
+  background:none;border:none;color:var(--text2);
+  font-size:1.3rem;cursor:pointer;padding:4px 8px;
+  border-radius:6px;transition:.15s;
+}
+.journal-close:hover{color:var(--red);background:rgba(255,107,107,.1);}
+
+.journal-entry{
+  display:flex;justify-content:space-between;align-items:center;
+  gap:12px;background:#071625;border:1px solid var(--border);
+  border-radius:10px;padding:14px 16px;margin-bottom:10px;
+}
+.je-main{flex:1;}
+.je-date{font-weight:600;color:var(--text);font-size:.95rem;}
+.je-loc{color:var(--text2);font-size:.85rem;margin-top:2px;}
+.je-calc{color:var(--text2);font-size:.85rem;margin-top:4px;}
+.je-calc strong{color:var(--gold);}
+.je-del{
+  background:none;border:none;font-size:1.1rem;
+  cursor:pointer;padding:6px;border-radius:6px;
+  transition:.15s;flex-shrink:0;
+}
+.je-del:hover{background:rgba(255,107,107,.15);}
+
+#mapBtn{
+  background:none;border:none;color:var(--text2);
+  font-size:1.1rem;cursor:pointer;padding:2px 6px;
+  border-radius:4px;transition:.15s;
+}
+#mapBtn:hover{color:var(--gold);transform:scale(1.1);}
+
+/* ── WORLD MAP OVERLAY ── */
+#mapOverlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(5,16,30,.96);
+  z-index:150;align-items:center;justify-content:center;
+  padding:16px;
+}
+.map-box{
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:var(--radius);padding:24px;
+  max-width:800px;width:100%;max-height:88vh;
+  overflow-y:auto;
+}
+#worldMapContainer{
+  width:100%;height:420px;border-radius:12px;
+  overflow:hidden;border:1px solid var(--border);
+  background:#0a1828;
+}
+.leaflet-popup-content-wrapper{
+  background:var(--panel)!important;color:var(--text)!important;
+  border-radius:10px!important;
+}
+.leaflet-popup-tip{background:var(--panel)!important;}
+.leaflet-popup-content strong{color:var(--gold);}
+.leaflet-popup-content small{color:var(--text2);}
+.leaflet-container{background:#0a1828!important;}
 </style>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 </head>
 <body>
 
@@ -533,7 +618,37 @@ select option{background:#071625;color:#ddeeff;}
 <div id="userBadge">
   <img id="userPhoto" src="" alt="" style="display:none">
   <span id="userName"></span>
+  <button id="journalBtn" onclick="showJournal()" title="Το ημερολόγιό μου">📔</button>
+  <button id="mapBtn" onclick="showWorldMap()" title="Παγκόσμιος Χάρτης">🗺️</button>
   <button id="signOutBtn" onclick="signOut()">↪ Έξοδος</button>
+</div>
+
+<!-- ══════════ JOURNAL OVERLAY ══════════ -->
+<div id="journalOverlay">
+  <div class="journal-box">
+    <div class="journal-header">
+      <h2>📔 Το ημερολόγιό μου</h2>
+      <button class="journal-close" onclick="hideJournal()">✕</button>
+    </div>
+    <p style="color:var(--text2);font-size:.9rem;margin-bottom:16px;">
+      Οι αποθηκευμένες παρατηρήσεις σου.
+    </p>
+    <div id="journalList"></div>
+  </div>
+</div>
+
+<!-- ══════════ WORLD MAP OVERLAY ══════════ -->
+<div id="mapOverlay">
+  <div class="map-box">
+    <div class="journal-header">
+      <h2>🗺️ Παγκόσμιος Χάρτης Παρατηρητών</h2>
+      <button class="journal-close" onclick="hideWorldMap()">✕</button>
+    </div>
+    <p style="color:var(--text2);font-size:.9rem;margin-bottom:14px;">
+      Εκπαιδευτικοί και μαθητές που χρησιμοποιούν τον Αστρολάβο σε όλο τον κόσμο.
+    </p>
+    <div id="worldMapContainer"></div>
+  </div>
 </div>
 
 
@@ -542,7 +657,12 @@ select option{background:#071625;color:#ddeeff;}
     <h2>📍 Τοποθεσία παρατήρησης</h2>
     <p>Η επιλογή σου θα αποθηκευτεί και δεν θα χρειαστεί να την ξαναδώσεις.</p>
 
-    <div class="tabs">
+    <label class="field-label">Όνομα χρήστη (θα φαίνεται στον παγκόσμιο χάρτη)</label>
+    <input type="text" id="setupUserName" placeholder="π.χ. Π. Πετρίδης" maxlength="40">
+    <label class="field-label">Σχολείο (προαιρετικό)</label>
+    <input type="text" id="setupSchool" placeholder="π.χ. Εσπερινό Γυμνάσιο Κω" maxlength="60">
+
+    <div class="tabs" style="margin-top:18px;">
       <button class="tab-btn active" onclick="switchTab('list')">📋 Λίστα</button>
       <button class="tab-btn" onclick="switchTab('manual')">✏️ Συντεταγμένες</button>
       <button class="tab-btn" onclick="switchTab('gps')">📡 GPS</button>
@@ -663,6 +783,9 @@ select option{background:#071625;color:#ddeeff;}
         <div class="leg"><div class="leg-line" style="background:var(--pointer)"></div>Δείκτης</div>
       </div>
       <div class="canvas-info" id="canvasInfo"></div>
+      <button id="saveObsBtn" class="btn btn-primary" style="display:none;margin-top:14px;" onclick="saveObservation()">
+        💾 Αποθήκευση παρατήρησης
+      </button>
     </div>
 
     <!-- Hours grid -->
@@ -948,7 +1071,7 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 // ═══════════════════════════════════════════════
 // CITIES DATABASE
 // ═══════════════════════════════════════════════
-const CITIES_DB = {"GR": {"name": "Ελλάδα", "cities": [{"name": "Αθήνα", "lat": 37.9838, "lon": 23.7275}, {"name": "Πειραιάς", "lat": 37.9421, "lon": 23.6465}, {"name": "Θεσσαλονίκη", "lat": 40.6401, "lon": 22.9444}, {"name": "Βέροια", "lat": 40.5236, "lon": 22.2048}, {"name": "Κιλκίς", "lat": 40.9938, "lon": 22.8754}, {"name": "Σέρρες", "lat": 41.0897, "lon": 23.5478}, {"name": "Πολύγυρος", "lat": 40.3756, "lon": 23.4378}, {"name": "Κατερίνη", "lat": 40.2697, "lon": 22.5021}, {"name": "Γιαννιτσά", "lat": 40.7886, "lon": 22.4156}, {"name": "Κοζάνη", "lat": 40.3006, "lon": 21.7892}, {"name": "Φλώρινα", "lat": 40.7832, "lon": 21.4075}, {"name": "Καστοριά", "lat": 40.5194, "lon": 21.268}, {"name": "Γρεβενά", "lat": 40.0833, "lon": 21.4265}, {"name": "Αλεξανδρούπολη", "lat": 40.8497, "lon": 25.8747}, {"name": "Κομοτηνή", "lat": 41.122, "lon": 25.4046}, {"name": "Ξάνθη", "lat": 41.1354, "lon": 24.888}, {"name": "Καβάλα", "lat": 40.9386, "lon": 24.4023}, {"name": "Δράμα", "lat": 41.1499, "lon": 24.1489}, {"name": "Ιωάννινα", "lat": 39.665, "lon": 20.8537}, {"name": "Πρέβεζα", "lat": 38.9579, "lon": 20.7522}, {"name": "Ηγουμενίτσα", "lat": 39.5003, "lon": 20.2664}, {"name": "Άρτα", "lat": 39.1601, "lon": 20.9851}, {"name": "Λάρισα", "lat": 39.639, "lon": 22.4191}, {"name": "Βόλος", "lat": 39.3667, "lon": 22.9333}, {"name": "Τρίκαλα", "lat": 39.556, "lon": 21.7682}, {"name": "Καρδίτσα", "lat": 39.3659, "lon": 21.9211}, {"name": "Λαμία", "lat": 38.8983, "lon": 22.4341}, {"name": "Χαλκίδα", "lat": 38.4636, "lon": 23.6036}, {"name": "Λιβαδειά", "lat": 38.4361, "lon": 22.8726}, {"name": "Αμφίκλεια", "lat": 38.6401, "lon": 22.5841}, {"name": "Καρπενήσι", "lat": 38.9235, "lon": 21.7876}, {"name": "Τρίπολη", "lat": 37.5084, "lon": 22.3791}, {"name": "Κόρινθος", "lat": 37.9402, "lon": 22.9282}, {"name": "Ναύπλιο", "lat": 37.5677, "lon": 22.8019}, {"name": "Καλαμάτα", "lat": 37.0389, "lon": 22.1141}, {"name": "Σπάρτη", "lat": 37.0739, "lon": 22.4285}, {"name": "Πύργος", "lat": 37.6741, "lon": 21.4368}, {"name": "Πάτρα", "lat": 38.2466, "lon": 21.7353}, {"name": "Μυτιλήνη", "lat": 39.1123, "lon": 26.5544}, {"name": "Χίος", "lat": 38.3672, "lon": 26.1367}, {"name": "Σάμος", "lat": 37.7519, "lon": 26.976}, {"name": "Ρόδος", "lat": 36.4349, "lon": 28.2176}, {"name": "Κως", "lat": 36.8923, "lon": 27.2877}, {"name": "Σύρος", "lat": 37.446, "lon": 24.9425}, {"name": "Νάξος", "lat": 37.1031, "lon": 25.3762}, {"name": "Ηράκλειο", "lat": 35.3387, "lon": 25.1442}, {"name": "Χανιά", "lat": 35.5138, "lon": 24.018}, {"name": "Ρέθυμνο", "lat": 35.3721, "lon": 24.4715}, {"name": "Άγιος Νικόλαος", "lat": 35.1896, "lon": 25.7166}, {"name": "Κέρκυρα", "lat": 39.6243, "lon": 19.9217}, {"name": "Αργοστόλι", "lat": 38.1729, "lon": 20.4871}, {"name": "Λευκάδα", "lat": 38.8333, "lon": 20.7052}, {"name": "Ζάκυνθος", "lat": 37.7906, "lon": 20.8952}]}, "CY": {"name": "Κύπρος", "cities": [{"name": "Λευκωσία", "lat": 35.1856, "lon": 33.3823}, {"name": "Λεμεσός", "lat": 34.6851, "lon": 33.0332}, {"name": "Λάρνακα", "lat": 34.9229, "lon": 33.6233}, {"name": "Πάφος", "lat": 34.7754, "lon": 32.4243}]}, "IT": {"name": "Ιταλία", "cities": [{"name": "Ρώμη", "lat": 41.9028, "lon": 12.4964}, {"name": "Μιλάνο", "lat": 45.4642, "lon": 9.19}, {"name": "Νάπολη", "lat": 40.8518, "lon": 14.2681}]}, "DE": {"name": "Γερμανία", "cities": [{"name": "Βερολίνο", "lat": 52.52, "lon": 13.405}, {"name": "Μόναχο", "lat": 48.1351, "lon": 11.582}, {"name": "Αμβούργο", "lat": 53.5753, "lon": 10.0153}]}, "FR": {"name": "Γαλλία", "cities": [{"name": "Παρίσι", "lat": 48.8566, "lon": 2.3522}, {"name": "Λυών", "lat": 45.764, "lon": 4.8357}, {"name": "Μασσαλία", "lat": 43.2965, "lon": 5.3698}]}, "GB": {"name": "Ηνωμένο Βασίλειο", "cities": [{"name": "Λονδίνο", "lat": 51.5074, "lon": -0.1278}, {"name": "Μάντσεστερ", "lat": 53.4808, "lon": -2.2426}, {"name": "Εδιμβούργο", "lat": 55.9533, "lon": -3.1883}]}, "US": {"name": "ΗΠΑ", "cities": [{"name": "Νέα Υόρκη", "lat": 40.7128, "lon": -74.006}, {"name": "Λος Άντζελες", "lat": 34.0522, "lon": -118.2437}, {"name": "Σικάγο", "lat": 41.8781, "lon": -87.6298}]}, "AU": {"name": "Αυστραλία", "cities": [{"name": "Σίδνεϊ", "lat": -33.8688, "lon": 151.2093}, {"name": "Μελβούρνη", "lat": -37.8136, "lon": 144.9631}, {"name": "Μπρίσμπεϊν", "lat": -27.4698, "lon": 153.0251}]}};
+const CITIES_DB = {"GR": {"name": "Ελλάδα", "cities": [{"name": "Αθήνα", "lat": 37.9838, "lon": 23.7275}, {"name": "Πειραιάς", "lat": 37.9421, "lon": 23.6465}, {"name": "Θεσσαλονίκη", "lat": 40.6401, "lon": 22.9444}, {"name": "Βέροια", "lat": 40.5236, "lon": 22.2048}, {"name": "Κιλκίς", "lat": 40.9938, "lon": 22.8754}, {"name": "Σέρρες", "lat": 41.0897, "lon": 23.5478}, {"name": "Πολύγυρος", "lat": 40.3756, "lon": 23.4378}, {"name": "Κατερίνη", "lat": 40.2697, "lon": 22.5021}, {"name": "Γιαννιτσά", "lat": 40.7886, "lon": 22.4156}, {"name": "Κοζάνη", "lat": 40.3006, "lon": 21.7892}, {"name": "Φλώρινα", "lat": 40.7832, "lon": 21.4075}, {"name": "Καστοριά", "lat": 40.5194, "lon": 21.268}, {"name": "Γρεβενά", "lat": 40.0833, "lon": 21.4265}, {"name": "Αλεξανδρούπολη", "lat": 40.8497, "lon": 25.8747}, {"name": "Κομοτηνή", "lat": 41.122, "lon": 25.4046}, {"name": "Ξάνθη", "lat": 41.1354, "lon": 24.888}, {"name": "Καβάλα", "lat": 40.9386, "lon": 24.4023}, {"name": "Δράμα", "lat": 41.1499, "lon": 24.1489}, {"name": "Ιωάννινα", "lat": 39.665, "lon": 20.8537}, {"name": "Πρέβεζα", "lat": 38.9579, "lon": 20.7522}, {"name": "Ηγουμενίτσα", "lat": 39.5003, "lon": 20.2664}, {"name": "Άρτα", "lat": 39.1601, "lon": 20.9851}, {"name": "Λάρισα", "lat": 39.639, "lon": 22.4191}, {"name": "Βόλος", "lat": 39.3667, "lon": 22.9333}, {"name": "Τρίκαλα", "lat": 39.556, "lon": 21.7682}, {"name": "Καρδίτσα", "lat": 39.3659, "lon": 21.9211}, {"name": "Λαμία", "lat": 38.8983, "lon": 22.4341}, {"name": "Χαλκίδα", "lat": 38.4636, "lon": 23.6036}, {"name": "Λιβαδειά", "lat": 38.4361, "lon": 22.8726}, {"name": "Αμφίκλεια", "lat": 38.6401, "lon": 22.5841}, {"name": "Καρπενήσι", "lat": 38.9235, "lon": 21.7876}, {"name": "Τρίπολη", "lat": 37.5084, "lon": 22.3791}, {"name": "Κόρινθος", "lat": 37.9402, "lon": 22.9282}, {"name": "Ναύπλιο", "lat": 37.5677, "lon": 22.8019}, {"name": "Καλαμάτα", "lat": 37.0389, "lon": 22.1141}, {"name": "Σπάρτη", "lat": 37.0739, "lon": 22.4285}, {"name": "Πύργος", "lat": 37.6741, "lon": 21.4368}, {"name": "Πάτρα", "lat": 38.2466, "lon": 21.7353}, {"name": "Μυτιλήνη", "lat": 39.1123, "lon": 26.5544}, {"name": "Χίος", "lat": 38.3672, "lon": 26.1367}, {"name": "Σάμος", "lat": 37.7519, "lon": 26.976}, {"name": "Ρόδος", "lat": 36.4349, "lon": 28.2176}, {"name": "Κως", "lat": 36.8923, "lon": 27.2877}, {"name": "Σύρος", "lat": 37.446, "lon": 24.9425}, {"name": "Νάξος", "lat": 37.1031, "lon": 25.3762}, {"name": "Ηράκλειο", "lat": 35.3387, "lon": 25.1442}, {"name": "Χανιά", "lat": 35.5138, "lon": 24.018}, {"name": "Ρέθυμνο", "lat": 35.3721, "lon": 24.4715}, {"name": "Άγιος Νικόλαος", "lat": 35.1896, "lon": 25.7166}, {"name": "Κέρκυρα", "lat": 39.6243, "lon": 19.9217}, {"name": "Αργοστόλι", "lat": 38.1729, "lon": 20.4871}, {"name": "Λευκάδα", "lat": 38.8333, "lon": 20.7052}, {"name": "Ζάκυνθος", "lat": 37.7906, "lon": 20.8952}]}, "CY": {"name": "Κύπρος", "cities": [{"name": "Λευκωσία", "lat": 35.1856, "lon": 33.3823}, {"name": "Λεμεσός", "lat": 34.6851, "lon": 33.0332}, {"name": "Λάρνακα", "lat": 34.9229, "lon": 33.6233}, {"name": "Πάφος", "lat": 34.7754, "lon": 32.4243}, {"name": "Αμμόχωστος", "lat": 35.1167, "lon": 33.95}, {"name": "Κερύνεια", "lat": 35.3417, "lon": 33.3192}]}, "IT": {"name": "Ιταλία", "cities": [{"name": "Ρώμη", "lat": 41.9028, "lon": 12.4964}, {"name": "Μιλάνο", "lat": 45.4642, "lon": 9.19}, {"name": "Νάπολη", "lat": 40.8518, "lon": 14.2681}, {"name": "Βενετία", "lat": 45.4408, "lon": 12.3155}, {"name": "Φλωρεντία", "lat": 43.7696, "lon": 11.2558}, {"name": "Μπολόνια", "lat": 44.4949, "lon": 11.3426}, {"name": "Τορίνο", "lat": 45.0703, "lon": 7.6869}, {"name": "Παλέρμο", "lat": 38.1157, "lon": 13.3615}]}, "DE": {"name": "Γερμανία", "cities": [{"name": "Βερολίνο", "lat": 52.52, "lon": 13.405}, {"name": "Μόναχο", "lat": 48.1351, "lon": 11.582}, {"name": "Αμβούργο", "lat": 53.5753, "lon": 10.0153}, {"name": "Κολωνία", "lat": 50.9375, "lon": 6.9603}, {"name": "Φρανκφούρτη", "lat": 50.1109, "lon": 8.6821}, {"name": "Στουτγάρδη", "lat": 48.7758, "lon": 9.1829}, {"name": "Ντίσελντορφ", "lat": 51.2277, "lon": 6.7735}, {"name": "Λειψία", "lat": 51.3397, "lon": 12.3731}]}, "FR": {"name": "Γαλλία", "cities": [{"name": "Παρίσι", "lat": 48.8566, "lon": 2.3522}, {"name": "Λυών", "lat": 45.764, "lon": 4.8357}, {"name": "Μασσαλία", "lat": 43.2965, "lon": 5.3698}, {"name": "Τουλούζη", "lat": 43.6047, "lon": 1.4442}, {"name": "Νίκαια", "lat": 43.7102, "lon": 7.262}, {"name": "Νάντη", "lat": 47.2184, "lon": -1.5536}, {"name": "Στρασβούργο", "lat": 48.5734, "lon": 7.7521}, {"name": "Μπορντό", "lat": 44.8378, "lon": -0.5792}]}, "GB": {"name": "Ηνωμένο Βασίλειο", "cities": [{"name": "Λονδίνο", "lat": 51.5074, "lon": -0.1278}, {"name": "Μάντσεστερ", "lat": 53.4808, "lon": -2.2426}, {"name": "Εδιμβούργο", "lat": 55.9533, "lon": -3.1883}, {"name": "Μπέρμιγχαμ", "lat": 52.4862, "lon": -1.8904}, {"name": "Γλασκώβη", "lat": 55.8642, "lon": -4.2518}, {"name": "Λίβερπουλ", "lat": 53.4084, "lon": -2.9916}, {"name": "Μπρίστολ", "lat": 51.4545, "lon": -2.5879}, {"name": "Καρδίφ", "lat": 51.4816, "lon": -3.1791}]}, "US": {"name": "ΗΠΑ", "cities": [{"name": "Νέα Υόρκη", "lat": 40.7128, "lon": -74.006}, {"name": "Λος Άντζελες", "lat": 34.0522, "lon": -118.2437}, {"name": "Σικάγο", "lat": 41.8781, "lon": -87.6298}, {"name": "Χιούστον", "lat": 29.7604, "lon": -95.3698}, {"name": "Φοίνιξ", "lat": 33.4484, "lon": -112.074}, {"name": "Φιλαδέλφεια", "lat": 39.9526, "lon": -75.1652}, {"name": "Σαν Φρανσίσκο", "lat": 37.7749, "lon": -122.4194}, {"name": "Βοστώνη", "lat": 42.3601, "lon": -71.0589}, {"name": "Σιάτλ", "lat": 47.6062, "lon": -122.3321}, {"name": "Ουάσιγκτον", "lat": 38.9072, "lon": -77.0369}]}, "AU": {"name": "Αυστραλία", "cities": [{"name": "Σίδνεϊ", "lat": -33.8688, "lon": 151.2093}, {"name": "Μελβούρνη", "lat": -37.8136, "lon": 144.9631}, {"name": "Μπρίσμπεϊν", "lat": -27.4698, "lon": 153.0251}, {"name": "Πέρθ", "lat": -31.9505, "lon": 115.8605}, {"name": "Αδελαΐδα", "lat": -34.9285, "lon": 138.6007}, {"name": "Καμπέρα", "lat": -35.2809, "lon": 149.13}]}, "CA": {"name": "Καναδάς", "cities": [{"name": "Τορόντο", "lat": 43.6532, "lon": -79.3832}, {"name": "Μόντρεαλ", "lat": 45.5017, "lon": -73.5673}, {"name": "Βανκούβερ", "lat": 49.2827, "lon": -123.1207}, {"name": "Οττάβα", "lat": 45.4215, "lon": -75.6972}, {"name": "Καλγκάρι", "lat": 51.0447, "lon": -114.0719}]}, "ES": {"name": "Ισπανία", "cities": [{"name": "Μαδρίτη", "lat": 40.4168, "lon": -3.7038}, {"name": "Βαρκελώνη", "lat": 41.3851, "lon": 2.1734}, {"name": "Βαλένθια", "lat": 39.4699, "lon": -0.3763}, {"name": "Σεβίλλη", "lat": 37.3891, "lon": -5.9845}, {"name": "Μπιλμπάο", "lat": 43.263, "lon": -2.935}]}, "TR": {"name": "Τουρκία", "cities": [{"name": "Κωνσταντινούπολη", "lat": 41.0082, "lon": 28.9784}, {"name": "Άγκυρα", "lat": 39.9334, "lon": 32.8597}, {"name": "Σμύρνη", "lat": 38.4237, "lon": 27.1428}, {"name": "Αττάλεια", "lat": 36.8969, "lon": 30.7133}]}, "EG": {"name": "Αίγυπτος", "cities": [{"name": "Κάιρο", "lat": 30.0444, "lon": 31.2357}, {"name": "Αλεξάνδρεια", "lat": 31.2001, "lon": 29.9187}, {"name": "Γκίζα", "lat": 30.0131, "lon": 31.2089}]}};
 
 // ═══════════════════════════════════════════════
 // LOCATION STATE
@@ -1095,11 +1218,19 @@ function saveGPS(){
 }
 
 function saveLocation(lat,lon,name){
-  locState = {lat,lon,name};
+  const userName = document.getElementById('setupUserName').value.trim();
+  const school    = document.getElementById('setupSchool').value.trim();
+  if(!userName){
+    alert('Παρακαλώ γράψε το όνομά σου πριν συνεχίσεις.');
+    document.getElementById('setupUserName').focus();
+    return;
+  }
+  locState = {lat,lon,name,userName,school};
   localStorage.setItem('astrolab_location', JSON.stringify(locState));
   document.getElementById('locationSetup').style.display='none';
   updateLocationBadge();
   autoDetectDST();
+  if (typeof window.addMapPin === 'function') window.addMapPin();
 }
 
 function updateLocationBadge(){
@@ -1685,6 +1816,19 @@ function drawSky(hour){
     ` &nbsp;|&nbsp; Υπολογισμένη: <strong style="color:var(--gold)">${timeStr}</strong>`;
 
   updateStep5(d);
+
+  // ── Αποθήκευση τρέχοντος αποτελέσματος για το κουμπί αποθήκευσης ──
+  window.lastCalcResult = {
+    dateStr: getDateStr(),
+    locationName: locState.name || '—',
+    lat: locState.lat,
+    lon: locState.lon,
+    hour: d.hour,
+    ccwDeg: d.ccwDeg,
+    calcTimeStr: timeStr
+  };
+  const saveBtn = document.getElementById('saveObsBtn');
+  if (saveBtn) saveBtn.style.display = 'block';
 }
 
 function drawClockExplain(ccwDeg){
@@ -1841,6 +1985,8 @@ function updateStep5(d){
 
 </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
 <!-- ══════════ FIREBASE AUTH ══════════ -->
 <script type="module">
 import { initializeApp }
@@ -1850,6 +1996,9 @@ import { getAuth, onAuthStateChanged, signOut as fbSignOut,
          sendEmailVerification, sendPasswordResetEmail,
          GoogleAuthProvider, signInWithPopup }
   from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, query, where,
+         orderBy, getDocs, deleteDoc, doc, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
 // ── Firebase Config ──
 const firebaseConfig = {
@@ -1863,10 +2012,13 @@ const firebaseConfig = {
 
 const app      = initializeApp(firebaseConfig);
 const auth     = getAuth(app);
+const db       = getFirestore(app);
 const provider = new GoogleAuthProvider();
+let currentUser = null;
 
 // ── Κατάσταση σύνδεσης ──
 onAuthStateChanged(auth, user => {
+  currentUser = user;
   if (user) {
     document.getElementById('authOverlay').style.display = 'none';
     document.getElementById('userBadge').style.display   = 'flex';
@@ -1984,6 +2136,183 @@ function greekErr(code) {
     'auth/too-many-requests':    'Πολλές προσπάθειες. Δοκίμασε αργότερα.',
     'auth/network-request-failed':'Πρόβλημα σύνδεσης internet.',
   })[code] || `Σφάλμα: ${code}`;
+}
+
+// ═══════════════════════════════════════════════
+// ΗΜΕΡΟΛΟΓΙΟ ΠΑΡΑΤΗΡΗΣΕΩΝ (Firestore)
+// ═══════════════════════════════════════════════
+
+window.saveObservation = async function(){
+  if(!currentUser){
+    alert('Πρέπει να είσαι συνδεδεμένος για να αποθηκεύσεις παρατήρηση.');
+    return;
+  }
+  if(!window.lastCalcResult){
+    alert('Κάνε πρώτα έναν υπολογισμό.');
+    return;
+  }
+  const btn = document.getElementById('saveObsBtn');
+  const original = btn.textContent;
+  btn.textContent = 'Αποθήκευση...';
+  btn.disabled = true;
+  try{
+    await addDoc(collection(db,'observations'), {
+      uid: currentUser.uid,
+      userEmail: currentUser.email || '',
+      dateStr: window.lastCalcResult.dateStr,
+      locationName: window.lastCalcResult.locationName,
+      lat: window.lastCalcResult.lat,
+      lon: window.lastCalcResult.lon,
+      observedHour: window.lastCalcResult.hour,
+      angleCCW: window.lastCalcResult.ccwDeg,
+      calculatedTime: window.lastCalcResult.calcTimeStr,
+      createdAt: serverTimestamp()
+    });
+    btn.textContent = '✓ Αποθηκεύτηκε!';
+    setTimeout(()=>{ btn.textContent = original; btn.disabled = false; }, 2000);
+  }catch(e){
+    console.error('Save failed:', e);
+    alert('Σφάλμα αποθήκευσης: ' + e.message);
+    btn.textContent = original;
+    btn.disabled = false;
+  }
+};
+
+window.loadObservations = async function(){
+  const listEl = document.getElementById('journalList');
+  if(!currentUser){
+    listEl.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px;">Συνδέσου για να δεις τις παρατηρήσεις σου.</p>';
+    return;
+  }
+  listEl.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px;">Φόρτωση...</p>';
+  try{
+    const q = query(
+      collection(db,'observations'),
+      where('uid','==',currentUser.uid),
+      orderBy('createdAt','desc')
+    );
+    const snap = await getDocs(q);
+    if(snap.empty){
+      listEl.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px;">Δεν έχεις αποθηκεύσει ακόμα παρατηρήσεις.</p>';
+      return;
+    }
+    let html = '';
+    snap.forEach(d=>{
+      const o = d.data();
+      const dateFmt = new Date(o.dateStr+'T12:00:00').toLocaleDateString('el-GR',{day:'numeric',month:'long',year:'numeric'});
+      html += `
+        <div class="journal-entry">
+          <div class="je-main">
+            <div class="je-date">${dateFmt}</div>
+            <div class="je-loc">${o.locationName} — ώρα παρατήρησης ${String(o.observedHour).padStart(2,'0')}:00</div>
+            <div class="je-calc">Γωνία: ${o.angleCCW}° &nbsp;|&nbsp; Υπολογίστηκε: <strong>${o.calculatedTime}</strong></div>
+          </div>
+          <button class="je-del" onclick="deleteObservation('${d.id}')" title="Διαγραφή">🗑</button>
+        </div>`;
+    });
+    listEl.innerHTML = html;
+  }catch(e){
+    console.error('Load failed:', e);
+    listEl.innerHTML = `<p style="color:#ff6b6b;text-align:center;padding:20px;">Σφάλμα φόρτωσης: ${e.message}</p>`;
+  }
+};
+
+window.deleteObservation = async function(id){
+  if(!confirm('Διαγραφή αυτής της παρατήρησης;')) return;
+  try{
+    await deleteDoc(doc(db,'observations',id));
+    window.loadObservations();
+  }catch(e){
+    alert('Σφάλμα διαγραφής: ' + e.message);
+  }
+};
+
+window.showJournal = function(){
+  document.getElementById('journalOverlay').style.display = 'flex';
+  window.loadObservations();
+};
+
+window.hideJournal = function(){
+  document.getElementById('journalOverlay').style.display = 'none';
+};
+
+// ═══════════════════════════════════════════════
+// ΠΑΓΚΟΣΜΙΟΣ ΧΑΡΤΗΣ ΠΑΡΑΤΗΡΗΤΩΝ (Firestore + Leaflet)
+// ═══════════════════════════════════════════════
+
+let worldMapInstance = null;
+
+// Προσθήκη πινέζας μετά την πρώτη εκκίνηση τοποθεσίας
+window.addMapPin = async function(){
+  if(!currentUser) return; // χρειάζεται σύνδεση
+  try{
+    await addDoc(collection(db,'mapPins'), {
+      uid: currentUser.uid,
+      userName: locState.userName || 'Ανώνυμος',
+      school: locState.school || '',
+      lat: locState.lat,
+      lon: locState.lon,
+      locationName: locState.name || '',
+      createdAt: serverTimestamp()
+    });
+  }catch(e){
+    console.error('addMapPin failed:', e);
+  }
+};
+
+window.showWorldMap = async function(){
+  document.getElementById('mapOverlay').style.display = 'flex';
+  const container = document.getElementById('worldMapContainer');
+
+  // Δημιουργία χάρτη μία φορά
+  if(!worldMapInstance){
+    container.innerHTML = '';
+    worldMapInstance = L.map(container).setView([40, 22], 4);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '© OpenStreetMap, © CARTO',
+      maxZoom: 18
+    }).addTo(worldMapInstance);
+  } else {
+    // Καθάρισμα παλιών pins πριν ξαναφορτώσει
+    worldMapInstance.eachLayer(layer=>{
+      if(layer instanceof L.Marker) worldMapInstance.removeLayer(layer);
+    });
+  }
+
+  // Αναγκαστικό resize (το container ήταν κρυφό όταν φτιάχτηκε ο χάρτης)
+  setTimeout(()=> worldMapInstance.invalidateSize(), 100);
+
+  // Φόρτωση pins από Firestore
+  try{
+    const snap = await getDocs(collection(db,'mapPins'));
+    const icon = L.divIcon({
+      className: '',
+      html: '<div style="width:14px;height:14px;background:#f0c060;border:2px solid #fff;border-radius:50%;box-shadow:0 0 8px rgba(240,192,96,.8);"></div>',
+      iconSize: [14,14],
+      iconAnchor: [7,7]
+    });
+    snap.forEach(d=>{
+      const p = d.data();
+      if(typeof p.lat !== 'number' || typeof p.lon !== 'number') return;
+      const popupHtml = `
+        <strong>${escapeHtml(p.userName||'Ανώνυμος')}</strong><br>
+        ${p.school ? '<small>'+escapeHtml(p.school)+'</small><br>' : ''}
+        <small>${escapeHtml(p.locationName||'')}</small>`;
+      L.marker([p.lat,p.lon], {icon}).addTo(worldMapInstance).bindPopup(popupHtml);
+    });
+  }catch(e){
+    console.error('Load map pins failed:', e);
+  }
+};
+
+window.hideWorldMap = function(){
+  document.getElementById('mapOverlay').style.display = 'none';
+};
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
 }
 </script>
 

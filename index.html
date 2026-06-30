@@ -154,7 +154,7 @@ select,input[type="text"],input[type="date"],input[type="number"]{
 }
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M0 0l6 8 6-8z' fill='%2390b8d8'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
 select:focus,input:focus{border-color:var(--gold2);}
-select option{background:#071625;}
+select option{background:#071625;color:#ddeeff;}
 
 /* ── BUTTONS ── */
 .btn{
@@ -609,9 +609,18 @@ select option{background:#071625;}
     <div class="card-title">Παράμετροι</div>
     <label class="field-label">Ημερομηνία παρατήρησης</label>
     <div class="date-select-row">
-      <select id="daySelect" aria-label="Ημέρα"></select>
-      <select id="monthSelect" aria-label="Μήνας"></select>
-      <select id="yearSelect" aria-label="Έτος"></select>
+      <div>
+        <label class="field-label" style="margin-top:0;font-size:.78rem;">Ημέρα</label>
+        <select id="daySelect" aria-label="Ημέρα"></select>
+      </div>
+      <div>
+        <label class="field-label" style="margin-top:0;font-size:.78rem;">Μήνας</label>
+        <select id="monthSelect" aria-label="Μήνας"></select>
+      </div>
+      <div>
+        <label class="field-label" style="margin-top:0;font-size:.78rem;">Έτος</label>
+        <select id="yearSelect" aria-label="Έτος"></select>
+      </div>
     </div>
     <div class="date-row" style="margin-top:14px;">
       <div></div>
@@ -1010,7 +1019,9 @@ function onCountryChange(){
   const code = document.getElementById('countrySelect').value;
   const citysel = document.getElementById('citySelect');
   citysel.innerHTML='';
-  CITIES_DB[code].cities.forEach(c=>{
+  const sortedCities = [...CITIES_DB[code].cities].sort((a,b)=>
+    a.name.localeCompare(b.name, 'el'));
+  sortedCities.forEach(c=>{
     const opt = document.createElement('option');
     opt.value = JSON.stringify({lat:c.lat,lon:c.lon,name:c.name});
     opt.textContent = c.name;

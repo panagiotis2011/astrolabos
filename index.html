@@ -1531,9 +1531,9 @@ function renderResults(corr, utcOff){
     <div class="step">
       <div class="step-n">5</div>
       <div class="step-t">
-        Τύπος: &nbsp;<span class="eq">(360° − γωνία<sub>αντιωρ.</sub>) ÷ 15 + διόρθωση = τοπική ώρα</span><br>
+        Τύπος: &nbsp;<span class="eq">γωνία<sub>αντιωρ.</sub> ÷ 15 + σταθερά = τοπική ώρα</span><br>
         <div id="clockExplain" style="margin-top:14px;"></div>
-        <div id="step5live" data-corrh="${corr.corrH}" style="margin-top:12px;padding:14px 16px;background:#071625;border-radius:9px;border:1px solid var(--border);font-size:1rem;line-height:2.2;">
+        <div id="step5live" data-cdate="${C_date}" style="margin-top:12px;padding:14px 16px;background:#071625;border-radius:9px;border:1px solid var(--border);font-size:1rem;line-height:2.2;">
           <em style="color:var(--text2);">— επίλεξε ώρα από τον χάρτη ή τα cards —</em>
         </div>
       </div>
@@ -1833,12 +1833,16 @@ function drawSky(hour){
   if (saveBtn) saveBtn.style.display = 'block';
 }
 
-function drawClockExplain(ccwDeg){
+function drawClockExplain(ccwDeg, C_date){
   const div = document.getElementById('clockExplain');
   if(!div) return;
 
-  const cw = (360 - ccwDeg + 360) % 360;
-  const hr = (cw / 15).toFixed(1);
+  const cw   = (360 - ccwDeg + 360) % 360;
+  const rawH = (ccwDeg / 15);
+  const totalH = ((rawH + (C_date||0)) % 24 + 24) % 24;
+  const tH = Math.floor(totalH), tM = Math.round((totalH%1)*60);
+  const timeStr = tH.toString().padStart(2,'0')+':'+tM.toString().padStart(2,'0');
+  const hr = rawH.toFixed(1);
 
   // Παράδειγμα χαρτί-ρολόι: svg 260x260
   const cx = 130, cy = 130, R = 100, r2 = 108;
@@ -1868,8 +1872,9 @@ function drawClockExplain(ccwDeg){
       Βλέπουμε τη γωνία <strong style="color:#4ecf8a;">${ccwDeg}° αντιωρολογιακά</strong> (πράσινο τόξο).
       Αλλά ο ουρανός γυρίζει <strong style="color:#f0a040;">ωρολογιακά</strong> — άρα η αντίστοιχη
       ωρολογιακή γωνία είναι <strong style="color:#f0a040;">${cw}°</strong> (πορτοκαλί τόξο).<br>
-      <span class="eq">360° − ${ccwDeg}° = ${cw}°</span> &nbsp;→&nbsp;
-      <span class="eq">${cw}° ÷ 15 = ${hr} ω</span>
+      <span class="eq">${ccwDeg}° ÷ 15 = ${hr} ω</span> &nbsp;+&nbsp;
+      <span class="eq">σταθ. ${(C_date||0).toFixed(2)} ω</span> &nbsp;=&nbsp;
+      <strong style="color:var(--gold)">≈ ${timeStr}</strong>
     </div>
     <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
       <svg width="220" height="220" viewBox="0 0 260 260" style="flex-shrink:0;">
@@ -1940,40 +1945,36 @@ function drawClockExplain(ccwDeg){
   </div>`;
 }
 function updateStep5(d){
-  drawClockExplain(d.ccwDeg);
+  drawClockExplain(d.ccwDeg, parseFloat(document.getElementById('step5live').dataset.cdate||'0'));
   const el = document.getElementById('step5live');
   if(!el) return;
-  const corrH    = parseFloat(el.dataset.corrh);
-  const corrHInt = Math.floor(corrH);
-  const corrMin  = Math.round((corrH%1)*60);
+  const C_date = parseFloat(el.dataset.cdate);
 
-  // Όλος ο υπολογισμός σε CCW:
-  // paDubhe = 360 - ccwDeg  (ωρολογιακή γωνία = αυτό που διαιρούμε με 15)
-  const ccw      = d.ccwDeg;
-  const cw       = (360 - ccw + 360) % 360;   // = paDubhe
-  const rawH     = cw / 15;
-  const totalH   = ((rawH + corrH) % 24 + 24) % 24;
+  // Σωστός υπολογισμός: τοπική ώρα = ccwDeg/15 + C_date
+  const ccw    = d.ccwDeg;
+  const rawH   = ccw / 15;
+  const totalH = ((rawH + C_date) % 24 + 24) % 24;
   const cH = Math.floor(totalH), cM = Math.round((totalH%1)*60);
-  const timeStr  = cH.toString().padStart(2,'0') + ':' + cM.toString().padStart(2,'0');
+  if(cM === 60){ cH++; cM = 0; }
+  const timeStr   = cH.toString().padStart(2,'0') + ':' + cM.toString().padStart(2,'0');
   const hourLabel = d.hour.toString().padStart(2,'0') + ':00';
+
+  // C_date σε ώρες και λεπτά για εμφάνιση
+  const CInt = Math.floor(C_date), CMin = Math.round((C_date%1)*60);
 
   el.innerHTML = `
     <table style="width:100%;border-collapse:collapse;font-size:.97rem;">
       <tr>
-        <td style="color:var(--text2);padding:2px 8px 2px 0;white-space:nowrap;">Μετρημένη γωνία (αντιωρολογιακά):</td>
+        <td style="color:var(--text2);padding:3px 8px 3px 0;white-space:nowrap;">Μετρημένη γωνία (αντιωρ.):</td>
         <td><span class="eq">${ccw}°</span></td>
       </tr>
       <tr>
-        <td style="color:var(--text2);padding:2px 8px 2px 0;white-space:nowrap;">Ωρολογιακή γωνία:</td>
-        <td><span class="eq">360° − ${ccw}° = ${cw}°</span></td>
+        <td style="color:var(--text2);padding:3px 8px 3px 0;white-space:nowrap;">Σε ώρες (÷15):</td>
+        <td><span class="eq">${ccw}° ÷ 15 = ${rawH.toFixed(2)} ω</span></td>
       </tr>
       <tr>
-        <td style="color:var(--text2);padding:2px 8px 2px 0;white-space:nowrap;">Σε ώρες (÷15):</td>
-        <td><span class="eq">${cw}° ÷ 15 = ${rawH.toFixed(2)} ω</span></td>
-      </tr>
-      <tr>
-        <td style="color:var(--text2);padding:2px 8px 2px 0;white-space:nowrap;">Διόρθωση ημερομηνίας:</td>
-        <td><span class="eq">+ ${corrHInt}ω ${corrMin}λ &nbsp;(${corrH.toFixed(2)} ω)</span></td>
+        <td style="color:var(--text2);padding:3px 8px 3px 0;white-space:nowrap;">Σταθερά ημερ./τοποθ.:</td>
+        <td><span class="eq">+ ${CInt}ω ${CMin}λ</span> <small style="color:var(--text2)">(${C_date.toFixed(3)} ω)</small></td>
       </tr>
       <tr style="border-top:1px solid var(--border);">
         <td style="color:var(--text2);padding:6px 8px 2px 0;white-space:nowrap;">Αποτέλεσμα:</td>

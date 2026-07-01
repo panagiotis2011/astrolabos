@@ -528,11 +528,19 @@ select option{background:#071625;color:#ddeeff;}
 .je-calc{color:var(--text2);font-size:.85rem;margin-top:4px;}
 .je-calc strong{color:var(--gold);}
 .je-del{
-  background:none;border:none;font-size:1.1rem;
-  cursor:pointer;padding:6px;border-radius:6px;
-  transition:.15s;flex-shrink:0;
+  background:#1a0a0a;
+  border:1px solid #5a2020;
+  color:#ff6b6b;
+  font-size:.82rem;
+  font-weight:600;
+  cursor:pointer;
+  padding:6px 12px;
+  border-radius:7px;
+  transition:.15s;
+  flex-shrink:0;
+  white-space:nowrap;
 }
-.je-del:hover{background:rgba(255,107,107,.15);}
+.je-del:hover{background:#2a0f0f;border-color:#ff6b6b;}
 
 #mapBtn{
   background:none;border:none;color:var(--text2);
@@ -646,9 +654,14 @@ select option{background:#071625;color:#ddeeff;}
       <h2>🗺️ Παγκόσμιος Χάρτης Παρατηρητών</h2>
       <button class="journal-close" onclick="hideWorldMap()">✕</button>
     </div>
-    <p style="color:var(--text2);font-size:.9rem;margin-bottom:14px;">
-      Εκπαιδευτικοί και μαθητές που χρησιμοποιούν τον Αστρολάβο σε όλο τον κόσμο.
-    </p>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+      <p style="color:var(--text2);font-size:.9rem;margin:0;">
+        Εκπαιδευτικοί και μαθητές που χρησιμοποιούν τον Αστρολάβο σε όλο τον κόσμο.
+      </p>
+      <button onclick="deleteMyPin()" style="background:#1a0a0a;border:1px solid #5a2020;color:#ff6b6b;font-size:.82rem;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;">
+        ✕ Διαγραφή πινέζας μου
+      </button>
+    </div>
     <div id="worldMapContainer"></div>
   </div>
 </div>
@@ -2212,7 +2225,7 @@ window.loadObservations = async function(){
             <div class="je-loc">${o.locationName} — ώρα παρατήρησης ${String(o.observedHour).padStart(2,'0')}:00</div>
             <div class="je-calc">Γωνία: ${o.angleCCW}° &nbsp;|&nbsp; Υπολογίστηκε: <strong>${o.calculatedTime}</strong></div>
           </div>
-          <button class="je-del" onclick="deleteObservation('${d.id}')" title="Διαγραφή">🗑</button>
+          <button class="je-del" onclick="deleteObservation('${d.id}')" title="Διαγραφή">✕ Διαγραφή</button>
         </div>`;
     });
     listEl.innerHTML = html;
@@ -2301,24 +2314,4 @@ window.showWorldMap = async function(){
       if(typeof p.lat !== 'number' || typeof p.lon !== 'number') return;
       const popupHtml = `
         <strong>${escapeHtml(p.userName||'Ανώνυμος')}</strong><br>
-        ${p.school ? '<small>'+escapeHtml(p.school)+'</small><br>' : ''}
-        <small>${escapeHtml(p.locationName||'')}</small>`;
-      L.marker([p.lat,p.lon], {icon}).addTo(worldMapInstance).bindPopup(popupHtml);
-    });
-  }catch(e){
-    console.error('Load map pins failed:', e);
-  }
-};
-
-window.hideWorldMap = function(){
-  document.getElementById('mapOverlay').style.display = 'none';
-};
-
-function escapeHtml(str){
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-</script>
-
-</
+        ${p.school ? '<small>'+es

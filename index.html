@@ -1083,6 +1083,7 @@ let gpsResult = null;
 let dstOn = false;
 let currentHour = 21;
 let hourData = [];
+let globalCDate = 0;
 
 // ── Init ──
 function runInit(){
@@ -1470,6 +1471,7 @@ function calculate(){
   const pa_mid   = posAngleStars(posP_mid, posD_mid);
   const ccw_mid  = (360 - pa_mid + 360) % 360;
   const C_date   = ((0 - ccw_mid/15) % 24 + 24) % 24;
+  globalCDate = C_date;  // αποθήκευση ως global
 
   const HOURS = [20,21,22,23,0,1];
   hourData = HOURS.map(h=>{
@@ -1489,13 +1491,13 @@ function calculate(){
   });
 
   currentHour=21;
-  renderResults(corr, utcOffset);
+  renderResults(corr, utcOffset, C_date);
 }
 
 // ═══════════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════════
-function renderResults(corr, utcOff){
+function renderResults(corr, utcOff, C_date){
   document.getElementById('results').style.display='block';
 
   // Correction grid
@@ -1945,10 +1947,10 @@ function drawClockExplain(ccwDeg, C_date){
   </div>`;
 }
 function updateStep5(d){
-  drawClockExplain(d.ccwDeg, parseFloat(document.getElementById('step5live').dataset.cdate||'0'));
+  drawClockExplain(d.ccwDeg, globalCDate);
   const el = document.getElementById('step5live');
   if(!el) return;
-  const C_date = parseFloat(el.dataset.cdate);
+  const C_date = globalCDate;
 
   // Σωστός υπολογισμός: τοπική ώρα = ccwDeg/15 + C_date
   const ccw    = d.ccwDeg;
@@ -2319,5 +2321,4 @@ function escapeHtml(str){
 }
 </script>
 
-</body>
-</html>
+</

@@ -544,29 +544,31 @@ select option{background:#071625;color:#ddeeff;}
 /* ── WORLD MAP OVERLAY ── */
 #mapOverlay{
   display:none;position:fixed;inset:0;
-  background:rgba(5,16,30,.96);
-  z-index:150;align-items:center;justify-content:center;
-  padding:16px;
+  background:rgba(5,16,30,.92);
+  z-index:150;align-items:flex-start;justify-content:center;
+  padding:12px;
+  overflow-y:auto;
 }
 .map-box{
   background:var(--panel);border:1px solid var(--border);
-  border-radius:var(--radius);padding:24px;
-  max-width:800px;width:100%;max-height:88vh;
-  overflow-y:auto;
+  border-radius:var(--radius);padding:20px;
+  width:100%;max-width:1000px;
+  margin:auto;
 }
 #worldMapContainer{
-  width:100%;height:420px;border-radius:12px;
+  width:100%;
+  height:calc(100vh - 200px);
+  min-height:400px;
+  border-radius:12px;
   overflow:hidden;border:1px solid var(--border);
-  background:#0a1828;
 }
 .leaflet-popup-content-wrapper{
-  background:var(--panel)!important;color:var(--text)!important;
+  background:#fff!important;color:#222!important;
   border-radius:10px!important;
 }
-.leaflet-popup-tip{background:var(--panel)!important;}
-.leaflet-popup-content strong{color:var(--gold);}
-.leaflet-popup-content small{color:var(--text2);}
-.leaflet-container{background:#0a1828!important;}
+.leaflet-popup-tip{background:#fff!important;}
+.leaflet-popup-content strong{color:#1a4a7a;}
+.leaflet-popup-content small{color:#555;}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 </head>
@@ -2267,9 +2269,9 @@ window.showWorldMap = async function(){
   // Δημιουργία χάρτη μία φορά
   if(!worldMapInstance){
     container.innerHTML = '';
-    worldMapInstance = L.map(container).setView([40, 22], 4);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '© OpenStreetMap, © CARTO',
+    worldMapInstance = L.map(container).setView([30, 10], 2);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 18
     }).addTo(worldMapInstance);
   } else {
@@ -2280,7 +2282,7 @@ window.showWorldMap = async function(){
   }
 
   // Αναγκαστικό resize (το container ήταν κρυφό όταν φτιάχτηκε ο χάρτης)
-  setTimeout(()=> worldMapInstance.invalidateSize(), 100);
+  setTimeout(()=> worldMapInstance.invalidateSize(), 200);
 
   // Φόρτωση pins από Firestore
   try{

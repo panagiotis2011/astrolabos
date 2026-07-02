@@ -663,9 +663,14 @@ select option{background:#071625;color:#ddeeff;}
       <p style="color:var(--text2);font-size:.9rem;margin:0;">
         Εκπαιδευτικοί και μαθητές που χρησιμοποιούν τον Αστρολάβο σε όλο τον κόσμο.
       </p>
-      <button onclick="deleteMyPin()" style="background:#1a0a0a;border:1px solid #5a2020;color:#ff6b6b;font-size:.82rem;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;">
-        ✕ Διαγραφή πινέζας μου
-      </button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="addMapPin(true)" style="background:#0a1e14;border:1px solid #2a7a40;color:#4ecf8a;font-size:.82rem;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;">
+          📍 Προσθήκη πινέζας μου
+        </button>
+        <button onclick="deleteMyPin()" style="background:#1a0a0a;border:1px solid #5a2020;color:#ff6b6b;font-size:.82rem;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;">
+          ✕ Διαγραφή πινέζας μου
+        </button>
+      </div>
     </div>
     <div id="worldMapContainer"></div>
   </div>
@@ -1251,7 +1256,12 @@ function saveLocation(lat,lon,name){
   document.getElementById('locationSetup').style.display='none';
   updateLocationBadge();
   autoDetectDST();
-  if (typeof window.addMapPin === 'function') window.addMapPin();
+  if (currentUser) {
+    addMapPin();
+  } else {
+    // Ο χρήστης δεν έχει συνδεθεί ακόμα — αποθηκεύουμε σημαία
+    window._pendingMapPin = true;
+  }
 }
 
 function updateLocationBadge(){
@@ -2041,6 +2051,11 @@ auth.onAuthStateChanged(user => {
       user.displayName || user.email.split('@')[0];
     const photo = document.getElementById('userPhoto');
     if (user.photoURL) { photo.src = user.photoURL; photo.style.display = 'block'; }
+    // Αν ο χρήστης μόλις έθεσε τοποθεσία, πρόσθεσε πινέζα τώρα που είναι συνδεδεμένος
+    if (window._pendingMapPin) {
+      window._pendingMapPin = false;
+      addMapPin();
+    }
   } else {
     document.getElementById('authOverlay').style.display = 'flex';
     document.getElementById('userBadge').style.display   = 'none';
@@ -2236,23 +2251,40 @@ function hideJournal(){
 
 let worldMapInstance = null;
 
-function addMapPin(){
-  if(!currentUser) return;
+function addMapPin(manual){
+  if(!currentUser){
+    if(manual) alert('Πρέπει να είσαι συνδεδεμένος.');
+    return;
+  }
+  if(!locState.lat){
+    if(manual) alert('Δεν έχει οριστεί τοποθεσία.');
+    return;
+  }
   db.collection('mapPins').add({
     uid: currentUser.uid,
-    userName: locState.userName || 'Ανώνυμος',
+    userName: locState.userName || currentUser.displayName || 'Ανώνυμος',
     school: locState.school || '',
     lat: locState.lat,
     lon: locState.lon,
     locationName: locState.name || '',
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).catch(e => console.error('addMapPin failed:', e));
+  }).then(() => {
+    if(manual){
+      // Ανανέωση χάρτη
+      if(worldMapInstance){ worldMapInstance.remove(); worldMapInstance=null; }
+      showWorldMap();
+    }
+  }).catch(e => {
+    if(manual) alert('Σφάλμα: ' + e.message);
+    else console.error('addMapPin failed:', e);
+  });
 }
 
 function showWorldMap(){
   document.getElementById('mapOverlay').style.display = 'flex';
   const container = document.getElementById('worldMapContainer');
   if(!worldMapInstance){
+    // Καθαρισμός container πριν τη νέα αρχικοποίηση
     container.innerHTML = '';
     worldMapInstance = L.map(container).setView([30,10],2);
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
@@ -2273,37 +2305,4 @@ function showWorldMap(){
       const p = d.data();
       if(typeof p.lat!=='number'||typeof p.lon!=='number') return;
       const popup = `<strong>${escapeHtml(p.userName||'Ανώνυμος')}</strong><br>
-        ${p.school?'<small>'+escapeHtml(p.school)+'</small><br>':''}
-        <small>${escapeHtml(p.locationName||'')}</small>`;
-      L.marker([p.lat,p.lon],{icon}).addTo(worldMapInstance).bindPopup(popup);
-    });
-  }).catch(e => console.error('Load pins failed:',e));
-}
-
-function hideWorldMap(){
-  document.getElementById('mapOverlay').style.display = 'none';
-}
-
-function deleteMyPin(){
-  if(!currentUser){ alert('Πρέπει να είσαι συνδεδεμένος.'); return; }
-  if(!confirm('Διαγραφή της πινέζας σου από τον παγκόσμιο χάρτη;')) return;
-  db.collection('mapPins').where('uid','==',currentUser.uid).get()
-    .then(snap => {
-      if(snap.empty){ alert('Δεν βρέθηκε πινέζα.'); return; }
-      const batch = db.batch();
-      snap.forEach(d => batch.delete(d.ref));
-      return batch.commit();
-    })
-    .then(() => { alert('✓ Η πινέζα σου διαγράφηκε.'); worldMapInstance=null; showWorldMap(); })
-    .catch(e => alert('Σφάλμα: ' + e.message));
-}
-
-function escapeHtml(str){
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
-</script>
-
-</body>
-</html>
+        ${p.sch

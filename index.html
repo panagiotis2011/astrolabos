@@ -660,17 +660,13 @@ select option{background:#071625;color:#ddeeff;}
       <button class="journal-close" onclick="hideWorldMap()">✕</button>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
-      <p style="color:var(--text2);font-size:.9rem;margin:0;">
-        Εκπαιδευτικοί και μαθητές που χρησιμοποιούν τον Αστρολάβο σε όλο τον κόσμο.
+      <p style="color:var(--text2);font-size:.9rem;margin:0;line-height:1.6;">
+        Εκπαιδευτικοί και μαθητές που χρησιμοποιούν τον Αστρολάβο σε όλο τον κόσμο.<br>
+        <small style="color:var(--text2);opacity:.7;">Η πινέζα σου προστίθεται αυτόματα όταν αποθηκεύεις παρατήρηση.</small>
       </p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button onclick="addMapPin(true)" style="background:#0a1e14;border:1px solid #2a7a40;color:#4ecf8a;font-size:.82rem;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;">
-          📍 Προσθήκη πινέζας μου
-        </button>
-        <button onclick="deleteMyPin()" style="background:#1a0a0a;border:1px solid #5a2020;color:#ff6b6b;font-size:.82rem;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;">
-          ✕ Διαγραφή πινέζας μου
-        </button>
-      </div>
+      <button onclick="deleteMyPin()" style="background:#1a0a0a;border:1px solid #5a2020;color:#ff6b6b;font-size:.82rem;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;flex-shrink:0;">
+        ✕ Διαγραφή πινέζας μου
+      </button>
     </div>
     <div id="worldMapContainer"></div>
   </div>
@@ -809,7 +805,7 @@ select option{background:#071625;color:#ddeeff;}
       </div>
       <div class="canvas-info" id="canvasInfo"></div>
       <button id="saveObsBtn" class="btn btn-primary" style="display:none;margin-top:14px;" onclick="saveObservation()">
-        💾 Αποθήκευση παρατήρησης
+        💾 Αποθήκευση παρατήρησης &amp; προσθήκη πινέζας στον χάρτη
       </button>
     </div>
 
@@ -2192,6 +2188,8 @@ function saveObservation(){
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
     btn.textContent = '✓ Αποθηκεύτηκε!';
+    console.log('saveObservation: success, calling addMapPin');
+    addMapPin();
     setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 2000);
   }).catch(e => {
     alert('Σφάλμα αποθήκευσης: ' + e.message);
@@ -2256,33 +2254,43 @@ function hideJournal(){
 
 let worldMapInstance = null;
 
-function addMapPin(manual){
+function addMapPin(){
   if(!currentUser){
-    if(manual) alert('Πρέπει να είσαι συνδεδεμένος.');
+    console.log('addMapPin: no currentUser');
     return;
   }
-  if(!locState.lat){
-    if(manual) alert('Δεν έχει οριστεί τοποθεσία.');
+  if(!locState || !locState.lat){
+    console.log('addMapPin: no locState', locState);
     return;
   }
-  db.collection('mapPins').add({
-    uid: currentUser.uid,
-    userName: locState.userName || currentUser.displayName || 'Ανώνυμος',
-    school: locState.school || '',
-    lat: locState.lat,
-    lon: locState.lon,
-    locationName: locState.name || '',
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
-    if(manual){
-      // Ανανέωση χάρτη
-      if(worldMapInstance){ worldMapInstance.remove(); worldMapInstance=null; }
-      showWorldMap();
-    }
-  }).catch(e => {
-    if(manual) alert('Σφάλμα: ' + e.message);
-    else console.error('addMapPin failed:', e);
-  });
+  console.log('addMapPin: adding pin for', locState);
+  // Διαγραφή παλιών πινεζών του χρήστη πρώτα
+  db.collection('mapPins').where('uid','==',currentUser.uid).get()
+    .then(snap => {
+      console.log('addMapPin: found', snap.size, 'existing pins to delete');
+      const batch = db.batch();
+      snap.forEach(d => batch.delete(d.ref));
+      return batch.commit();
+    })
+    .then(() => {
+      const pinData = {
+        uid: currentUser.uid,
+        userName: locState.userName || currentUser.displayName || currentUser.email.split('@')[0] || 'Ανώνυμος',
+        school: locState.school || '',
+        lat: locState.lat,
+        lon: locState.lon,
+        locationName: locState.name || '',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      console.log('addMapPin: writing pin', pinData);
+      return db.collection('mapPins').add(pinData);
+    })
+    .then(ref => {
+      console.log('addMapPin: success, id=', ref.id);
+    })
+    .catch(e => {
+      console.error('addMapPin failed:', e.code, e.message);
+    });
 }
 
 function showWorldMap(){

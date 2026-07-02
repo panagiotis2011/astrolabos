@@ -528,19 +528,24 @@ select option{background:#071625;color:#ddeeff;}
 .je-calc{color:var(--text2);font-size:.85rem;margin-top:4px;}
 .je-calc strong{color:var(--gold);}
 .je-del{
-  background:#1a0a0a;
-  border:1px solid #5a2020;
-  color:#ff6b6b;
-  font-size:.82rem;
-  font-weight:600;
+  background:#2a0f0f;
+  border:2px solid #cc3333;
+  color:#ff8888;
+  font-size:.85rem;
+  font-weight:700;
   cursor:pointer;
-  padding:6px 12px;
-  border-radius:7px;
+  padding:8px 14px;
+  border-radius:8px;
   transition:.15s;
   flex-shrink:0;
   white-space:nowrap;
+  min-width:90px;
 }
-.je-del:hover{background:#2a0f0f;border-color:#ff6b6b;}
+.je-del:hover{
+  background:#3d1010;
+  border-color:#ff4444;
+  color:#ffaaaa;
+}
 
 #mapBtn{
   background:none;border:none;color:var(--text2);
@@ -2005,19 +2010,12 @@ function updateStep5(d){
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
-<!-- ══════════ FIREBASE AUTH ══════════ -->
-<script type="module">
-import { initializeApp }
-  from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut as fbSignOut,
-         createUserWithEmailAndPassword, signInWithEmailAndPassword,
-         sendEmailVerification, sendPasswordResetEmail,
-         GoogleAuthProvider, signInWithPopup }
-  from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where,
-         orderBy, getDocs, deleteDoc, doc, serverTimestamp }
-  from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+<!-- ══════════ FIREBASE (compat SDK - works without module bundler) ══════════ -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 
+<script>
 // ── Firebase Config ──
 const firebaseConfig = {
   apiKey: "AIzaSyAV4gTr0sCv2md_7H_0XtifvFpIE5-Wnfo",
@@ -2028,14 +2026,13 @@ const firebaseConfig = {
   appId: "1:429299206359:web:a156f90f3c9df246ca8892"
 };
 
-const app      = initializeApp(firebaseConfig);
-const auth     = getAuth(app);
-const db       = getFirestore(app);
-const provider = new GoogleAuthProvider();
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
 let currentUser = null;
 
 // ── Κατάσταση σύνδεσης ──
-onAuthStateChanged(auth, user => {
+auth.onAuthStateChanged(user => {
   currentUser = user;
   if (user) {
     document.getElementById('authOverlay').style.display = 'none';
@@ -2050,73 +2047,70 @@ onAuthStateChanged(auth, user => {
   }
 });
 
-// ── Global functions (window.X για να δουλεύουν τα onclick) ──
-window.emailLogin = async () => {
+// ── Auth functions ──
+function emailLogin(){
   const email = document.getElementById('loginEmail').value.trim();
   const pass  = document.getElementById('loginPass').value;
   const err   = document.getElementById('loginErr');
   err.textContent = '';
-  try {
-    const cred = await signInWithEmailAndPassword(auth, email, pass);
-    if (!cred.user.emailVerified) {
-      await fbSignOut(auth);
-      err.innerHTML = `Το email δεν έχει επιβεβαιωθεί ακόμα.<br>
-        <a href="#" onclick="resendVerification('${email}','${pass}')" 
-           style="color:var(--gold2);">Αποστολή νέου link</a>`;
-    }
-  }
-  catch(e) { err.textContent = greekErr(e.code); }
-};
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(cred => {
+      if (!cred.user.emailVerified) {
+        auth.signOut();
+        err.innerHTML = `Το email δεν έχει επιβεβαιωθεί ακόμα.<br>
+          <a href="#" onclick="resendVerification('${email}','${pass}')"
+             style="color:var(--gold2);">Αποστολή νέου link</a>`;
+      }
+    })
+    .catch(e => { err.textContent = greekErr(e.code); });
+}
 
-window.resendVerification = async (email, pass) => {
-  try {
-    const cred = await signInWithEmailAndPassword(auth, email, pass);
-    await sendEmailVerification(cred.user);
-    await fbSignOut(auth);
-    document.getElementById('loginErr').innerHTML =
-      '<span style="color:#4ecf8a;">✓ Νέο link στάλθηκε στο email σου.</span>';
-  } catch(e) { document.getElementById('loginErr').textContent = greekErr(e.code); }
-};
-
-window.emailRegister = async () => {
+function emailRegister(){
   const email = document.getElementById('regEmail').value.trim();
   const pass  = document.getElementById('regPass').value;
   const err   = document.getElementById('regErr');
   err.textContent = '';
-  try {
-    const cred = await createUserWithEmailAndPassword(auth, email, pass);
-    // Στέλνουμε email επιβεβαίωσης
-    await sendEmailVerification(cred.user);
-    // Αποσυνδέουμε μέχρι να επιβεβαιώσει
-    await fbSignOut(auth);
-    // Εμφανίζουμε μήνυμα
-    document.getElementById('auth-register').innerHTML = `
-      <div style="background:#0a2a14;border:1px solid #2a7a40;border-radius:10px;padding:20px;text-align:center;line-height:1.8;">
-        <div style="font-size:2rem;margin-bottom:8px;">📧</div>
-        <strong style="color:#4ecf8a;font-size:1.05rem;">Έλεγξε το email σου!</strong><br>
-        <span style="color:var(--text2);font-size:.92rem;">
-          Στάλθηκε σύνδεσμος επιβεβαίωσης στο<br>
-          <strong style="color:var(--text);">${email}</strong><br><br>
-          Κλικ στο link και μετά συνδέσου από εδώ.
-        </span>
-        <button class="btn btn-primary" style="margin-top:16px;" onclick="authTab('login')">
-          Πήγαινε στη Σύνδεση
-        </button>
-      </div>`;
-  }
-  catch(e) { err.textContent = greekErr(e.code); }
-};
+  auth.createUserWithEmailAndPassword(email, pass)
+    .then(cred => cred.user.sendEmailVerification())
+    .then(() => {
+      auth.signOut();
+      document.getElementById('auth-register').innerHTML = `
+        <div style="background:#0a2a14;border:1px solid #2a7a40;border-radius:10px;padding:20px;text-align:center;line-height:1.8;">
+          <div style="font-size:2rem;margin-bottom:8px;">📧</div>
+          <strong style="color:#4ecf8a;font-size:1.05rem;">Έλεγξε το email σου!</strong><br>
+          <span style="color:var(--text2);font-size:.92rem;">
+            Στάλθηκε σύνδεσμος επιβεβαίωσης στο<br>
+            <strong style="color:var(--text);">${email}</strong><br><br>
+            Κλικ στο link και μετά συνδέσου από εδώ.
+          </span>
+          <button class="btn btn-primary" style="margin-top:16px;" onclick="authTab('login')">
+            Πήγαινε στη Σύνδεση
+          </button>
+        </div>`;
+    })
+    .catch(e => { err.textContent = greekErr(e.code); });
+}
 
-window.googleLogin = async () => {
-  const err = document.getElementById('loginErr');
-  err.textContent = '';
-  try { await signInWithPopup(auth, provider); }
-  catch(e) { err.textContent = greekErr(e.code); }
-};
+function googleLogin(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider)
+    .catch(e => { document.getElementById('loginErr').textContent = greekErr(e.code); });
+}
 
-window.signOut = async () => { await fbSignOut(auth); };
+function signOut(){ auth.signOut(); }
 
-window.forgotPassword = async () => {
+function resendVerification(email, pass){
+  auth.signInWithEmailAndPassword(email, pass)
+    .then(cred => cred.user.sendEmailVerification())
+    .then(() => { auth.signOut(); })
+    .then(() => {
+      document.getElementById('loginErr').innerHTML =
+        '<span style="color:#4ecf8a;">✓ Νέο link στάλθηκε στο email σου.</span>';
+    })
+    .catch(e => { document.getElementById('loginErr').textContent = greekErr(e.code); });
+}
+
+function forgotPassword(){
   const email = document.getElementById('loginEmail').value.trim();
   const err   = document.getElementById('loginErr');
   if (!email) {
@@ -2124,25 +2118,24 @@ window.forgotPassword = async () => {
     document.getElementById('loginEmail').focus();
     return;
   }
-  try {
-    await sendPasswordResetEmail(auth, email);
-    err.innerHTML = `<span style="color:#4ecf8a;">
-      ✓ Στάλθηκε email επαναφοράς κωδικού στο <strong>${email}</strong>.<br>
-      Έλεγξε και τον φάκελο Spam αν δεν το βρεις.
-    </span>`;
-  } catch(e) {
-    err.textContent = greekErr(e.code);
-  }
-};
+  auth.sendPasswordResetEmail(email)
+    .then(() => {
+      err.innerHTML = `<span style="color:#4ecf8a;">
+        ✓ Στάλθηκε email επαναφοράς κωδικού στο <strong>${email}</strong>.<br>
+        Έλεγξε και τον φάκελο Spam αν δεν το βρεις.
+      </span>`;
+    })
+    .catch(e => { err.textContent = greekErr(e.code); });
+}
 
-window.authTab = (name) => {
+function authTab(name){
   document.querySelectorAll('.auth-tab').forEach((t,i) =>
     t.classList.toggle('active',(i===0&&name==='login')||(i===1&&name==='register')));
   document.querySelectorAll('.auth-pane').forEach(p=>p.classList.remove('active'));
   document.getElementById('auth-'+name).classList.add('active');
-};
+}
 
-function greekErr(code) {
+function greekErr(code){
   return ({
     'auth/invalid-email':        'Μη έγκυρο email.',
     'auth/user-not-found':       'Δεν βρέθηκε λογαριασμός.',
@@ -2153,165 +2146,164 @@ function greekErr(code) {
     'auth/popup-closed-by-user': 'Το παράθυρο Google έκλεισε.',
     'auth/too-many-requests':    'Πολλές προσπάθειες. Δοκίμασε αργότερα.',
     'auth/network-request-failed':'Πρόβλημα σύνδεσης internet.',
-  })[code] || `Σφάλμα: ${code}`;
+  })[code] || 'Σφάλμα: ' + code;
 }
 
 // ═══════════════════════════════════════════════
 // ΗΜΕΡΟΛΟΓΙΟ ΠΑΡΑΤΗΡΗΣΕΩΝ (Firestore)
 // ═══════════════════════════════════════════════
 
-window.saveObservation = async function(){
-  if(!currentUser){
-    alert('Πρέπει να είσαι συνδεδεμένος για να αποθηκεύσεις παρατήρηση.');
-    return;
-  }
-  if(!window.lastCalcResult){
-    alert('Κάνε πρώτα έναν υπολογισμό.');
-    return;
-  }
+function saveObservation(){
+  if(!currentUser){ alert('Πρέπει να είσαι συνδεδεμένος.'); return; }
+  if(!window.lastCalcResult){ alert('Κάνε πρώτα έναν υπολογισμό.'); return; }
   const btn = document.getElementById('saveObsBtn');
   const original = btn.textContent;
-  btn.textContent = 'Αποθήκευση...';
-  btn.disabled = true;
-  try{
-    await addDoc(collection(db,'observations'), {
-      uid: currentUser.uid,
-      userEmail: currentUser.email || '',
-      dateStr: window.lastCalcResult.dateStr,
-      locationName: window.lastCalcResult.locationName,
-      lat: window.lastCalcResult.lat,
-      lon: window.lastCalcResult.lon,
-      observedHour: window.lastCalcResult.hour,
-      angleCCW: window.lastCalcResult.ccwDeg,
-      calculatedTime: window.lastCalcResult.calcTimeStr,
-      createdAt: serverTimestamp()
-    });
+  btn.textContent = 'Αποθήκευση...'; btn.disabled = true;
+  db.collection('observations').add({
+    uid: currentUser.uid,
+    userEmail: currentUser.email || '',
+    dateStr: window.lastCalcResult.dateStr,
+    locationName: window.lastCalcResult.locationName,
+    lat: window.lastCalcResult.lat,
+    lon: window.lastCalcResult.lon,
+    observedHour: window.lastCalcResult.hour,
+    angleCCW: window.lastCalcResult.ccwDeg,
+    calculatedTime: window.lastCalcResult.calcTimeStr,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
     btn.textContent = '✓ Αποθηκεύτηκε!';
-    setTimeout(()=>{ btn.textContent = original; btn.disabled = false; }, 2000);
-  }catch(e){
-    console.error('Save failed:', e);
+    setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 2000);
+  }).catch(e => {
     alert('Σφάλμα αποθήκευσης: ' + e.message);
-    btn.textContent = original;
-    btn.disabled = false;
-  }
-};
+    btn.textContent = original; btn.disabled = false;
+  });
+}
 
-window.loadObservations = async function(){
+function loadObservations(){
   const listEl = document.getElementById('journalList');
   if(!currentUser){
     listEl.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px;">Συνδέσου για να δεις τις παρατηρήσεις σου.</p>';
     return;
   }
   listEl.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px;">Φόρτωση...</p>';
-  try{
-    const q = query(
-      collection(db,'observations'),
-      where('uid','==',currentUser.uid),
-      orderBy('createdAt','desc')
-    );
-    const snap = await getDocs(q);
-    if(snap.empty){
-      listEl.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px;">Δεν έχεις αποθηκεύσει ακόμα παρατηρήσεις.</p>';
-      return;
-    }
-    let html = '';
-    snap.forEach(d=>{
-      const o = d.data();
-      const dateFmt = new Date(o.dateStr+'T12:00:00').toLocaleDateString('el-GR',{day:'numeric',month:'long',year:'numeric'});
-      html += `
-        <div class="journal-entry">
+  db.collection('observations')
+    .where('uid','==',currentUser.uid)
+    .orderBy('createdAt','desc')
+    .get()
+    .then(snap => {
+      if(snap.empty){
+        listEl.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px;">Δεν έχεις αποθηκεύσει ακόμα παρατηρήσεις.</p>';
+        return;
+      }
+      let html = '';
+      snap.forEach(d => {
+        const o = d.data();
+        const dateFmt = new Date(o.dateStr+'T12:00:00').toLocaleDateString('el-GR',{day:'numeric',month:'long',year:'numeric'});
+        html += `<div class="journal-entry">
           <div class="je-main">
             <div class="je-date">${dateFmt}</div>
             <div class="je-loc">${o.locationName} — ώρα παρατήρησης ${String(o.observedHour).padStart(2,'0')}:00</div>
             <div class="je-calc">Γωνία: ${o.angleCCW}° &nbsp;|&nbsp; Υπολογίστηκε: <strong>${o.calculatedTime}</strong></div>
           </div>
-          <button class="je-del" onclick="deleteObservation('${d.id}')" title="Διαγραφή">✕ Διαγραφή</button>
+          <button class="je-del" onclick="deleteObservation('${d.id}')">✕ Διαγραφή</button>
         </div>`;
+      });
+      listEl.innerHTML = html;
+    })
+    .catch(e => {
+      listEl.innerHTML = `<p style="color:#ff6b6b;text-align:center;padding:20px;">Σφάλμα: ${e.message}</p>`;
     });
-    listEl.innerHTML = html;
-  }catch(e){
-    console.error('Load failed:', e);
-    listEl.innerHTML = `<p style="color:#ff6b6b;text-align:center;padding:20px;">Σφάλμα φόρτωσης: ${e.message}</p>`;
-  }
-};
+}
 
-window.deleteObservation = async function(id){
+function deleteObservation(id){
   if(!confirm('Διαγραφή αυτής της παρατήρησης;')) return;
-  try{
-    await deleteDoc(doc(db,'observations',id));
-    window.loadObservations();
-  }catch(e){
-    alert('Σφάλμα διαγραφής: ' + e.message);
-  }
-};
+  db.collection('observations').doc(id).delete()
+    .then(() => loadObservations())
+    .catch(e => alert('Σφάλμα διαγραφής: ' + e.message));
+}
 
-window.showJournal = function(){
+function showJournal(){
   document.getElementById('journalOverlay').style.display = 'flex';
-  window.loadObservations();
-};
-
-window.hideJournal = function(){
+  loadObservations();
+}
+function hideJournal(){
   document.getElementById('journalOverlay').style.display = 'none';
-};
+}
 
 // ═══════════════════════════════════════════════
-// ΠΑΓΚΟΣΜΙΟΣ ΧΑΡΤΗΣ ΠΑΡΑΤΗΡΗΤΩΝ (Firestore + Leaflet)
+// ΠΑΓΚΟΣΜΙΟΣ ΧΑΡΤΗΣ (Firestore + Leaflet)
 // ═══════════════════════════════════════════════
 
 let worldMapInstance = null;
 
-// Προσθήκη πινέζας μετά την πρώτη εκκίνηση τοποθεσίας
-window.addMapPin = async function(){
-  if(!currentUser) return; // χρειάζεται σύνδεση
-  try{
-    await addDoc(collection(db,'mapPins'), {
-      uid: currentUser.uid,
-      userName: locState.userName || 'Ανώνυμος',
-      school: locState.school || '',
-      lat: locState.lat,
-      lon: locState.lon,
-      locationName: locState.name || '',
-      createdAt: serverTimestamp()
-    });
-  }catch(e){
-    console.error('addMapPin failed:', e);
-  }
-};
+function addMapPin(){
+  if(!currentUser) return;
+  db.collection('mapPins').add({
+    uid: currentUser.uid,
+    userName: locState.userName || 'Ανώνυμος',
+    school: locState.school || '',
+    lat: locState.lat,
+    lon: locState.lon,
+    locationName: locState.name || '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(e => console.error('addMapPin failed:', e));
+}
 
-window.showWorldMap = async function(){
+function showWorldMap(){
   document.getElementById('mapOverlay').style.display = 'flex';
   const container = document.getElementById('worldMapContainer');
-
-  // Δημιουργία χάρτη μία φορά
   if(!worldMapInstance){
     container.innerHTML = '';
-    worldMapInstance = L.map(container).setView([30, 10], 2);
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 18
+    worldMapInstance = L.map(container).setView([30,10],2);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{
+      attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom:18
     }).addTo(worldMapInstance);
   } else {
-    // Καθάρισμα παλιών pins πριν ξαναφορτώσει
-    worldMapInstance.eachLayer(layer=>{
-      if(layer instanceof L.Marker) worldMapInstance.removeLayer(layer);
-    });
+    worldMapInstance.eachLayer(l => { if(l instanceof L.Marker) worldMapInstance.removeLayer(l); });
   }
-
-  // Αναγκαστικό resize (το container ήταν κρυφό όταν φτιάχτηκε ο χάρτης)
-  setTimeout(()=> worldMapInstance.invalidateSize(), 200);
-
-  // Φόρτωση pins από Firestore
-  try{
-    const snap = await getDocs(collection(db,'mapPins'));
+  setTimeout(() => worldMapInstance.invalidateSize(), 200);
+  db.collection('mapPins').get().then(snap => {
     const icon = L.divIcon({
-      className: '',
-      html: '<div style="width:14px;height:14px;background:#f0c060;border:2px solid #fff;border-radius:50%;box-shadow:0 0 8px rgba(240,192,96,.8);"></div>',
-      iconSize: [14,14],
-      iconAnchor: [7,7]
+      className:'',
+      html:'<div style="width:14px;height:14px;background:#f0c060;border:2px solid #fff;border-radius:50%;box-shadow:0 0 8px rgba(240,192,96,.8);"></div>',
+      iconSize:[14,14], iconAnchor:[7,7]
     });
-    snap.forEach(d=>{
+    snap.forEach(d => {
       const p = d.data();
-      if(typeof p.lat !== 'number' || typeof p.lon !== 'number') return;
-      const popupHtml = `
-        <strong>${escapeHtml(p.userName||'Ανώνυμος')}</strong><br>
-        ${p.school ? '<small>'+es
+      if(typeof p.lat!=='number'||typeof p.lon!=='number') return;
+      const popup = `<strong>${escapeHtml(p.userName||'Ανώνυμος')}</strong><br>
+        ${p.school?'<small>'+escapeHtml(p.school)+'</small><br>':''}
+        <small>${escapeHtml(p.locationName||'')}</small>`;
+      L.marker([p.lat,p.lon],{icon}).addTo(worldMapInstance).bindPopup(popup);
+    });
+  }).catch(e => console.error('Load pins failed:',e));
+}
+
+function hideWorldMap(){
+  document.getElementById('mapOverlay').style.display = 'none';
+}
+
+function deleteMyPin(){
+  if(!currentUser){ alert('Πρέπει να είσαι συνδεδεμένος.'); return; }
+  if(!confirm('Διαγραφή της πινέζας σου από τον παγκόσμιο χάρτη;')) return;
+  db.collection('mapPins').where('uid','==',currentUser.uid).get()
+    .then(snap => {
+      if(snap.empty){ alert('Δεν βρέθηκε πινέζα.'); return; }
+      const batch = db.batch();
+      snap.forEach(d => batch.delete(d.ref));
+      return batch.commit();
+    })
+    .then(() => { alert('✓ Η πινέζα σου διαγράφηκε.'); worldMapInstance=null; showWorldMap(); })
+    .catch(e => alert('Σφάλμα: ' + e.message));
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+</script>
+
+</body>
+</html>

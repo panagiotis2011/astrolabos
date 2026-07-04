@@ -1516,17 +1516,23 @@ const UMA_LINES = [
   ['dubhe','merak'],
 ];
 const UMA_EXTRA = [
-  { ra:178.46, dec:53.694, mag:3.3 }, // Phecda γ
-  { ra:183.86, dec:57.033, mag:3.3 }, // Megrez δ
-  { ra:193.51, dec:55.960, mag:1.8 }, // Alioth ε
-  { ra:200.98, dec:54.925, mag:2.3 }, // Mizar ζ
-  { ra:206.89, dec:49.313, mag:1.9 }, // Alkaid η
-  // UMi
-  { ra:222.68, dec:74.156, mag:4.2 },
-  { ra:236.07, dec:77.794, mag:4.3 },
-  { ra:247.37, dec:75.756, mag:4.3 },
-  { ra:262.69, dec:86.589, mag:5.0 },
-  { ra:251.49, dec:82.037, mag:4.3 },
+  { ra:178.46, dec:53.694, mag:3.3 }, // Phecda γ UMa
+  { ra:183.86, dec:57.033, mag:3.3 }, // Megrez δ UMa
+  { ra:193.51, dec:55.960, mag:1.8 }, // Alioth ε UMa
+  { ra:200.98, dec:54.925, mag:2.3 }, // Mizar ζ UMa
+  { ra:206.89, dec:49.313, mag:1.9 }, // Alkaid η UMa
+];
+
+// Μικρή Άρκτος — αστέρες με σωστές συντεταγμένες
+// Σειρά: Kochab(β) → Pherkad(γ) → η → ζ → ε → δ → Πολικός(α)
+const UMI_STARS = [
+  { ra:222.68, dec:74.156, mag:2.1, name:'Kochab'   }, // β UMi
+  { ra:236.07, dec:71.834, mag:3.0, name:'Pherkad'  }, // γ UMi
+  { ra:236.02, dec:77.794, mag:4.3, name:'η UMi'    }, // η UMi
+  { ra:222.68, dec:77.794, mag:4.3, name:'ζ UMi'    }, // ζ UMi (corrected)
+  { ra:251.49, dec:82.037, mag:4.2, name:'ε UMi'    }, // ε UMi
+  { ra:247.37, dec:75.756, mag:4.3, name:'δ UMi'    }, // δ UMi
+  // Πολικός = STARS.polaris (α UMi) — στο κέντρο του χάρτη
 ];
 
 // ═══════════════════════════════════════════════
@@ -1821,6 +1827,61 @@ function drawSky(hour){
   ctx.moveTo(b4XY.x,b4XY.y);
   ctx.lineTo(aliXY.x,aliXY.y); ctx.lineTo(mizXY.x,mizXY.y); ctx.lineTo(alkXY.x,alkXY.y);
   ctx.strokeStyle='rgba(100,155,230,.35)'; ctx.lineWidth=1.5; ctx.stroke();
+
+  // ── ΜΙΚΡΗ ΑΡΚΤΟΣ ──
+  // Υπολογισμός θέσεων αστέρων UMi
+  const umiPositions = UMI_STARS.map(s => ({
+    ...s,
+    pos: raDecToAltAz(s.ra, s.dec, locState.lat, locState.lon, d.jsDate)
+  })).map(s => ({ ...s, xy: starToXY(s.pos.alt, s.pos.az) }));
+
+  // Σχεδιασμός αστέρων UMi
+  umiPositions.forEach(s => {
+    if(!s.xy.visible) return;
+    const br = Math.max(.2, 1-(s.mag-2.0)/3.0);
+    // Glow
+    const glow = ctx.createRadialGradient(s.xy.x,s.xy.y,0,s.xy.x,s.xy.y,5);
+    glow.addColorStop(0,`rgba(200,230,255,${br*.7})`);
+    glow.addColorStop(1,'transparent');
+    ctx.fillStyle=glow; ctx.beginPath(); ctx.arc(s.xy.x,s.xy.y,5,0,2*Math.PI); ctx.fill();
+    // Αστέρι
+    const r = s.mag < 2.5 ? 4 : 2.5;
+    ctx.beginPath(); ctx.arc(s.xy.x,s.xy.y,r,0,2*Math.PI);
+    ctx.fillStyle=`rgba(180,215,255,${br})`; ctx.fill();
+    // Ετικέτα για Kochab και Pherkad
+    if(s.name==='Kochab' || s.name==='Pherkad'){
+      ctx.fillStyle='rgba(160,200,255,.7)';
+      ctx.font='11px Noto Sans,sans-serif';
+      ctx.textAlign='left'; ctx.textBaseline='bottom';
+      ctx.fillText(s.name, s.xy.x+5, s.xy.y-3);
+    }
+  });
+
+  // Γραμμές Μικρής Άρκτου
+  // Κάδος: Kochab(β) - Pherkad(γ) - η - ζ (τετράπλευρο)
+  // Λαβή: ζ - ε - δ - Πολικός
+  const umiMap = {};
+  umiPositions.forEach(s => { umiMap[s.name] = s.xy; });
+  const pXY2 = {x:cx, y:cy, visible:true}; // Πολικός = κέντρο
+
+  // Κάδος UMi
+  const umiCup = [umiMap['Kochab'], umiMap['Pherkad'], umiMap['η UMi'], umiMap['ζ UMi']];
+  if(umiCup.every(p => p && p.visible)){
+    ctx.beginPath();
+    ctx.moveTo(umiCup[0].x, umiCup[0].y);
+    umiCup.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.closePath();
+    ctx.strokeStyle='rgba(140,190,255,.4)'; ctx.lineWidth=1.5; ctx.stroke();
+  }
+
+  // Λαβή UMi: ζ → ε → δ → Πολικός
+  const umiHandle = [umiMap['ζ UMi'], umiMap['ε UMi'], umiMap['δ UMi'], pXY2];
+  if(umiHandle.every(p => p && p.visible)){
+    ctx.beginPath();
+    ctx.moveTo(umiHandle[0].x, umiHandle[0].y);
+    umiHandle.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+    ctx.strokeStyle='rgba(140,190,255,.35)'; ctx.lineWidth=1.3; ctx.stroke();
+  }
 
   // Κύρια αστέρια
   function drawStar(xy, s, label, labelBelow){

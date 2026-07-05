@@ -1528,10 +1528,10 @@ const UMA_EXTRA = [
 const UMI_STARS = [
   { ra:222.68, dec:74.156, mag:2.1, name:'Kochab'  }, // β UMi
   { ra:236.07, dec:71.834, mag:3.0, name:'Pherkad' }, // γ UMi
-  { ra:237.45, dec:74.917, mag:4.9, name:'η UMi'   }, // η UMi
-  { ra:224.79, dec:77.794, mag:4.3, name:'ζ UMi'   }, // ζ UMi
-  { ra:251.49, dec:82.037, mag:4.2, name:'ε UMi'   }, // ε UMi
-  { ra:247.37, dec:86.586, mag:4.4, name:'δ UMi'   }, // δ UMi - κοντά στον Πολικό
+  { ra:231.02, dec:74.917, mag:4.9, name:'η UMi'   }, // η UMi (Hipparcos)
+  { ra:206.52, dec:77.794, mag:4.3, name:'ζ UMi'   }, // ζ UMi (Hipparcos)
+  { ra:248.52, dec:82.032, mag:4.2, name:'ε UMi'   }, // ε UMi (Hipparcos)
+  { ra:263.05, dec:86.586, mag:4.4, name:'δ UMi'   }, // δ UMi (Hipparcos)
   // Πολικός = STARS.polaris (α UMi) — στο κέντρο
 ];
 
@@ -1859,11 +1859,11 @@ function drawSky(hour){
     ctx.lineWidth=2.2; ctx.stroke();
   }
 
-  // Παραλληλόγραμμο: β(Kochab)→γ(Pherkad)→ζ→η→β
+  // Παραλληλόγραμμο: β→γ→η→ζ→β (περιμετρικά)
   umiLine(umiMap['Kochab'],  umiMap['Pherkad']);
-  umiLine(umiMap['Pherkad'], umiMap['ζ UMi']);
-  umiLine(umiMap['ζ UMi'],   umiMap['η UMi']);
-  umiLine(umiMap['η UMi'],   umiMap['Kochab']);
+  umiLine(umiMap['Pherkad'], umiMap['η UMi']);
+  umiLine(umiMap['η UMi'],   umiMap['ζ UMi']);
+  umiLine(umiMap['ζ UMi'],   umiMap['Kochab']);
 
   // Λαβή: ζ→ε→δ→Πολικός
   umiLine(umiMap['ζ UMi'], umiMap['ε UMi']);

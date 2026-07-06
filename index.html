@@ -620,10 +620,24 @@ select option{background:#071625;color:#ddeeff;}
 .leaflet-popup-tip{background:#fff!important;}
 .leaflet-popup-content strong{color:#1a4a7a;}
 .leaflet-popup-content small{color:#555;}
+
+/* ── LANG TOGGLE ── */
+#langToggle{
+  position:fixed;top:12px;left:12px;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:8px;padding:6px 12px;
+  font-family:'Cinzel',serif;font-size:.85rem;font-weight:700;
+  color:var(--gold);cursor:pointer;
+  z-index:50;transition:.15s;
+  box-shadow:0 2px 12px rgba(0,0,0,.3);
+}
+#langToggle:hover{border-color:var(--gold);background:var(--accent);}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 </head>
 <body>
+
+<button id="langToggle" onclick="toggleLang()">EN</button>
 
 <!-- ══════════ AUTH OVERLAY ══════════ -->
 <div id="authOverlay">
@@ -641,28 +655,28 @@ select option{background:#071625;color:#ddeeff;}
     <div class="auth-pane active" id="auth-login">
       <input class="auth-input" type="email" id="loginEmail" placeholder="Email">
       <input class="auth-input" type="password" id="loginPass" placeholder="Κωδικός">
-      <button class="btn btn-primary" style="margin-top:4px;" onclick="emailLogin()">Σύνδεση με Email</button>
+      <button class="btn btn-primary" style="margin-top:4px;" onclick="emailLogin()"><span data-i18n="btn_login_email">Σύνδεση με Email</span></button>
       <div class="auth-divider">ή</div>
       <button class="btn-google" onclick="googleLogin()">
         <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Σύνδεση με Google
       </button>
       <div class="auth-err" id="loginErr"></div>
-      <div class="auth-switch">Δεν έχεις λογαριασμό; <a onclick="authTab('register')">Εγγραφή</a> &nbsp;|&nbsp; <a onclick="forgotPassword()">Ξέχασα τον κωδικό</a></div>
+      <div class="auth-switch"><span data-i18n="no_account">Δεν έχεις λογαριασμό;</span> <a onclick="authTab('register')">Εγγραφή</a> &nbsp;|&nbsp; <a onclick="forgotPassword()"><span data-i18n="forgot_pass">Ξέχασα τον κωδικό</span></a></div>
     </div>
 
     <!-- Register -->
     <div class="auth-pane" id="auth-register">
       <input class="auth-input" type="email" id="regEmail" placeholder="Email">
       <input class="auth-input" type="password" id="regPass" placeholder="Κωδικός (min 6 χαρακτήρες)">
-      <button class="btn btn-primary" style="margin-top:4px;" onclick="emailRegister()">Δημιουργία λογαριασμού</button>
+      <button class="btn btn-primary" style="margin-top:4px;" onclick="emailRegister()"><span data-i18n="btn_register">Δημιουργία λογαριασμού</span></button>
       <div class="auth-divider">ή</div>
       <button class="btn-google" onclick="googleLogin()">
         <svg width="20" height="20" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Εγγραφή με Google
       </button>
       <div class="auth-err" id="regErr"></div>
-      <div class="auth-switch">Έχεις ήδη λογαριασμό; <a onclick="authTab('login')">Σύνδεση</a></div>
+      <div class="auth-switch"><span data-i18n="have_account">Έχεις ήδη λογαριασμό;</span> <a onclick="authTab('login')">Σύνδεση</a></div>
     </div>
   </div>
 </div>
@@ -671,20 +685,20 @@ select option{background:#071625;color:#ddeeff;}
 <div id="userBadge">
   <img id="userPhoto" src="" alt="" style="display:none">
   <span id="userName"></span>
-  <button id="journalBtn" onclick="showJournal()" title="Το ημερολόγιό μου">📔</button>
+  <button id="journalBtn" onclick="showJournal()" title="Το ημερολόγιό μου"><span data-i18n="btn_journal">📔 Ημερολόγιο</span</button>
   <button id="mapBtn" onclick="showWorldMap()" title="Παγκόσμιος Χάρτης">🗺️</button>
-  <button id="signOutBtn" onclick="signOut()">↪ Έξοδος</button>
+  <button id="signOutBtn" onclick="signOut()"><span data-i18n="btn_signout">↪ Έξοδος</span></button>
 </div>
 
 <!-- ══════════ JOURNAL OVERLAY ══════════ -->
 <div id="journalOverlay">
   <div class="journal-box">
     <div class="journal-header">
-      <h2>📔 Το ημερολόγιό μου</h2>
+      <h2><span data-i18n="journal_title">📔 Το ημερολόγιό μου</span></h2>
       <button class="journal-close" onclick="hideJournal()">✕</button>
     </div>
     <p style="color:var(--text2);font-size:.9rem;margin-bottom:16px;">
-      Οι αποθηκευμένες παρατηρήσεις σου.
+      <span data-i18n="journal_desc">Οι αποθηκευμένες παρατηρήσεις σου.</span>
     </p>
     <div id="journalList"></div>
   </div>
@@ -694,16 +708,16 @@ select option{background:#071625;color:#ddeeff;}
 <div id="mapOverlay">
   <div class="map-box">
     <div class="journal-header">
-      <h2>🗺️ Παγκόσμιος Χάρτης Παρατηρητών</h2>
+      <h2><span data-i18n="map_title">🗺️ Παγκόσμιος Χάρτης Παρατηρητών</span></h2>
       <button class="journal-close" onclick="hideWorldMap()">✕</button>
     </div>
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
       <p style="color:var(--text2);font-size:.9rem;margin:0;line-height:1.6;">
-        Εκπαιδευτικοί και μαθητές που χρησιμοποιούν τον Αστρολάβο σε όλο τον κόσμο.<br>
-        <small style="color:var(--text2);opacity:.7;">Η πινέζα σου προστίθεται αυτόματα όταν αποθηκεύεις παρατήρηση.</small>
+        <span data-i18n="map_desc">Εκπαιδευτικοί και μαθητές που χρησιμοποιούν τον Αστρολάβο σε όλο τον κόσμο.</span><br>
+        <small style="color:var(--text2);opacity:.7;"><span data-i18n="map_pin_auto">Η πινέζα σου προστίθεται αυτόματα όταν αποθηκεύεις παρατήρηση.</span></small>
       </p>
       <button onclick="deleteMyPin()" style="background:#1a0a0a;border:1px solid #5a2020;color:#ff6b6b;font-size:.82rem;font-weight:600;padding:6px 14px;border-radius:7px;cursor:pointer;white-space:nowrap;flex-shrink:0;">
-        ✕ Διαγραφή πινέζας μου
+        <span data-i18n="btn_delete_pin">✕ Διαγραφή πινέζας μου</span>
       </button>
     </div>
     <div id="worldMapContainer"></div>
@@ -713,13 +727,13 @@ select option{background:#071625;color:#ddeeff;}
 
 <div id="locationSetup">
   <div class="setup-box">
-    <h2>📍 Τοποθεσία παρατήρησης</h2>
-    <p>Η επιλογή σου θα αποθηκευτεί και δεν θα χρειαστεί να την ξαναδώσεις.</p>
+    <h2><span data-i18n="loc_title">📍 Τοποθεσία παρατήρησης</span></h2>
+    <p><span data-i18n="loc_intro">Η επιλογή σου θα αποθηκευτεί και δεν θα χρειαστεί να την ξαναδώσεις.</span></p>
 
-    <label class="field-label">Όνομα χρήστη (θα φαίνεται στον παγκόσμιο χάρτη)</label>
-    <input type="text" id="setupUserName" placeholder="π.χ. Π. Πετρίδης" maxlength="40">
-    <label class="field-label">Σχολείο (προαιρετικό)</label>
-    <input type="text" id="setupSchool" placeholder="π.χ. Εσπερινό Γυμνάσιο Κω" maxlength="60">
+    <label class="field-label" data-i18n="loc_username">Όνομα χρήστη (θα φαίνεται στον παγκόσμιο χάρτη)</label>
+    <input type="text" id="setupUserName" placeholder="π.χ. Π. Πετρίδης" data-i18n-ph="loc_username" maxlength="40">
+    <label class="field-label" data-i18n="loc_school">Σχολείο (προαιρετικό)</label>
+    <input type="text" id="setupSchool" placeholder="π.χ. Εσπερινό Γυμνάσιο Κω" data-i18n-ph="loc_school" maxlength="60">
 
     <div class="tabs" style="margin-top:18px;">
       <button class="tab-btn active" onclick="switchTab('list')">📋 Λίστα</button>
@@ -729,9 +743,9 @@ select option{background:#071625;color:#ddeeff;}
 
     <!-- TAB: LIST -->
     <div class="tab-pane active" id="tab-list">
-      <label class="field-label">Χώρα</label>
+      <label class="field-label" data-i18n="lbl_country">Χώρα</label>
       <select id="countrySelect" onchange="onCountryChange()"></select>
-      <label class="field-label">Πόλη</label>
+      <label class="field-label" data-i18n="lbl_city">Πόλη</label>
       <select id="citySelect"></select>
       <button class="btn btn-primary" onclick="saveFromList()">✓ Επιλογή</button>
     </div>
@@ -765,8 +779,8 @@ select option{background:#071625;color:#ddeeff;}
 <!-- ══════════ MAIN APP ══════════ -->
 <header>
   <span class="icon">✦</span>
-  <h1>Αστρολάβος των Εκπαιδευτικών</h1>
-  <p class="subtitle">Εκτίμηση νυχτερινής ώρας από τη Μεγάλη Άρκτο</p>
+  <h1 data-i18n="app_title">Αστρολάβος των Εκπαιδευτικών</h1>
+  <p class="subtitle" data-i18n="app_subtitle">Εκτίμηση νυχτερινής ώρας από τη Μεγάλη Άρκτο</p>
 </header>
 
 <!-- ══════════ QUOTE BAR ══════════ -->
@@ -781,31 +795,31 @@ select option{background:#071625;color:#ddeeff;}
 
   <!-- Location Badge -->
   <div class="card">
-    <div class="card-title">Τοποθεσία παρατήρησης</div>
+    <div class="card-title"><span data-i18n="card_location">Τοποθεσία παρατήρησης</span></div>
     <div id="locationBadge">
       <div class="loc-info">
         <div class="loc-name" id="locName">—</div>
         <div class="loc-coords" id="locCoords">—</div>
       </div>
-      <button class="btn-change" onclick="changeLocation()">✎ Αλλαγή</button>
+      <button class="btn-change" onclick="changeLocation()"><span data-i18n="btn_change">✎ Αλλαγή</span></button>
     </div>
   </div>
 
   <!-- Date + DST + Calc -->
   <div class="card">
-    <div class="card-title">Παράμετροι</div>
-    <label class="field-label">Ημερομηνία παρατήρησης</label>
+    <div class="card-title"><span data-i18n="card_params">Παράμετροι</span></div>
+    <label class="field-label"><span data-i18n="lbl_date">Ημερομηνία παρατήρησης</span></label>
     <div class="date-select-row">
       <div>
-        <label class="field-label" style="margin-top:0;font-size:.78rem;">Ημέρα</label>
+        <label class="field-label" style="margin-top:0;font-size:.78rem;" data-i18n="lbl_day">Ημέρα</label>
         <select id="daySelect" aria-label="Ημέρα"></select>
       </div>
       <div>
-        <label class="field-label" style="margin-top:0;font-size:.78rem;">Μήνας</label>
+        <label class="field-label" style="margin-top:0;font-size:.78rem;" data-i18n="lbl_month">Μήνας</label>
         <select id="monthSelect" aria-label="Μήνας"></select>
       </div>
       <div>
-        <label class="field-label" style="margin-top:0;font-size:.78rem;">Έτος</label>
+        <label class="field-label" style="margin-top:0;font-size:.78rem;" data-i18n="lbl_year">Έτος</label>
         <select id="yearSelect" aria-label="Έτος"></select>
       </div>
     </div>
@@ -819,7 +833,7 @@ select option{background:#071625;color:#ddeeff;}
       </div>
     </div>
     <div style="margin-top:18px;">
-      <button id="calcBtn" onclick="calculate()">⟳ Υπολογισμός</button>
+      <button id="calcBtn" onclick="calculate()"><span data-i18n="btn_calc">⟳ Υπολογισμός</span></button>
     </div>
   </div>
 
@@ -828,13 +842,13 @@ select option{background:#071625;color:#ddeeff;}
 
     <!-- Correction summary -->
     <div class="card">
-      <div class="card-title">Διόρθωση ώρας</div>
+      <div class="card-title"><span data-i18n="card_correction">Διόρθωση ώρας</span></div>
       <div class="corr-grid" id="corrGrid"></div>
     </div>
 
     <!-- Sky map -->
     <div class="card">
-      <div class="card-title">Χάρτης Βόρειου Ουρανού</div>
+      <div class="card-title"><span data-i18n="card_sky">Χάρτης Βόρειου Ουρανού</span></div>
       <div class="sky-wrap">
         <canvas id="skyCanvas" width="700" height="700"></canvas>
       </div>
@@ -844,26 +858,26 @@ select option{background:#071625;color:#ddeeff;}
         <button onclick="shiftHour(1)">▶</button>
       </div>
       <div class="legend">
-        <div class="leg"><div class="leg-dot" style="background:var(--polar)"></div>Πολικός (α UMi)</div>
-        <div class="leg"><div class="leg-dot" style="background:var(--starw)"></div>Dubhe (α UMa)</div>
-        <div class="leg"><div class="leg-dot" style="background:var(--starb)"></div>Merak (β UMa)</div>
-        <div class="leg"><div class="leg-line" style="background:var(--pointer)"></div>Δείκτης</div>
+        <div class="leg"><div class="leg-dot" style="background:var(--polar)"></div><span data-i18n="leg_polaris">Πολικός (α UMi)</span></div>
+        <div class="leg"><div class="leg-dot" style="background:var(--starw)"></div><span data-i18n="leg_dubhe">Dubhe (α UMa)</span></div>
+        <div class="leg"><div class="leg-dot" style="background:var(--starb)"></div><span data-i18n="leg_merak">Merak (β UMa)</span></div>
+        <div class="leg"><div class="leg-line" style="background:var(--pointer)"></div><span data-i18n="leg_pointer">Δείκτης</span></div>
       </div>
       <div class="canvas-info" id="canvasInfo"></div>
       <button id="saveObsBtn" class="btn btn-primary" style="display:none;margin-top:14px;" onclick="saveObservation()">
-        💾 Αποθήκευση παρατήρησης &amp; προσθήκη πινέζας στον χάρτη
+        <span data-i18n="btn_save_obs">💾 Αποθήκευση παρατήρησης &amp; προσθήκη πινέζας στον χάρτη</span>
       </button>
     </div>
 
     <!-- Hours grid -->
     <div class="card">
-      <div class="card-title">Γωνίες &amp; υπολογισμένες ώρες</div>
+      <div class="card-title"><span data-i18n="card_angles">Γωνίες &amp; υπολογισμένες ώρες</span></div>
       <div class="hours-grid" id="hoursGrid"></div>
     </div>
 
     <!-- Steps -->
     <div class="card">
-      <div class="card-title">Βήματα υπολογισμού</div>
+      <div class="card-title"><span data-i18n="card_steps">Βήματα υπολογισμού</span></div>
       <div id="stepsContent"></div>
     </div>
 
@@ -1181,8 +1195,9 @@ function showQuote(){
   // Fade out
   el.classList.remove('visible');
   setTimeout(() => {
-    body.textContent = q.el.text;
-    auth.textContent = '— ' + q.el.author;
+    const ql = q[currentLang] || q.el;
+    body.textContent = ql.text;
+    auth.textContent = '— ' + ql.author;
     // Fade in
     el.classList.add('visible');
   }, 400);
@@ -1196,6 +1211,229 @@ function startQuoteRotation(){
   setInterval(showQuote, 12000);
 }
 
+// ═══════════════════════════════════════════════
+// i18n — ΔΙΓΛΩΣΣΟ ΣΥΣΤΗΜΑ
+// ═══════════════════════════════════════════════
+const LANG_DATA = {
+  el: {
+    // Auth
+    app_title:        'Αστρολάβος των Εκπαιδευτικών',
+    app_subtitle:     'Εκτίμηση νυχτερινής ώρας από τη Μεγάλη Άρκτο',
+    auth_intro:       'Συνδέσου για να αποθηκεύεις τις παρατηρήσεις σου.',
+    tab_login:        'Σύνδεση',
+    tab_register:     'Εγγραφή',
+    btn_login_email:  'Σύνδεση με Email',
+    btn_login_google: 'Σύνδεση με Google',
+    no_account:       'Δεν έχεις λογαριασμό;',
+    forgot_pass:      'Ξέχασα τον κωδικό',
+    btn_register:     'Δημιουργία λογαριασμού',
+    btn_reg_google:   'Εγγραφή με Google',
+    have_account:     'Έχεις ήδη λογαριασμό;',
+    btn_signout:      '↪ Έξοδος',
+    btn_journal:      '📔 Ημερολόγιο',
+    btn_map:          '🗺️ Χάρτης',
+    // Journal
+    journal_title:    '📔 Το ημερολόγιό μου',
+    journal_desc:     'Οι αποθηκευμένες παρατηρήσεις σου.',
+    // Map
+    map_title:        '🗺️ Παγκόσμιος Χάρτης Παρατηρητών',
+    map_desc:         'Εκπαιδευτικοί και μαθητές που χρησιμοποιούν τον Αστρολάβο σε όλο τον κόσμο.',
+    map_pin_auto:     'Η πινέζα σου προστίθεται αυτόματα όταν αποθηκεύεις παρατήρηση.',
+    btn_delete_pin:   '✕ Διαγραφή πινέζας μου',
+    // Location setup
+    loc_title:        '📍 Τοποθεσία παρατήρησης',
+    loc_intro:        'Η επιλογή σου θα αποθηκευτεί και δεν θα χρειαστεί να την ξαναδώσεις.',
+    loc_username:     'Όνομα χρήστη (θα φαίνεται στον παγκόσμιο χάρτη)',
+    loc_school:       'Σχολείο (προαιρετικό)',
+    tab_list:         '📋 Λίστα',
+    tab_manual:       '✏️ Συντεταγμένες',
+    tab_gps:          '📡 GPS',
+    lbl_country:      'Χώρα',
+    lbl_city:         'Πόλη',
+    btn_select:       '✓ Επιλογή',
+    lbl_lat:          'Γεωγραφικό πλάτος (π.χ. 36.89)',
+    lbl_lon:          'Γεωγραφικό μήκος (π.χ. 27.28)',
+    lbl_locname:      'Όνομα τοποθεσίας (προαιρετικό)',
+    gps_note:         '📋 Σημείωση για το GPS:',
+    gps_https:        'Ο εντοπισμός λειτουργεί μόνο αν η εφαρμογή τρέχει μέσω <strong>https://</strong> (π.χ. GitHub Pages) ή <strong>localhost</strong>.',
+    gps_file:         'Αν ανοίγεις το αρχείο απευθείας (file://), ο browser απορρίπτει αυτόματα την άδεια.',
+    gps_alt:          '<strong>Εναλλακτικά:</strong> χρησιμοποίησε την καρτέλα «Λίστα» ή βρες τις συντεταγμένες σου από το Google Maps και βάλε τις χειροκίνητα.',
+    btn_gps_try:      '📡 Δοκιμή εντοπισμού GPS',
+    btn_gps_save:     '✓ Αποθήκευση θέσης GPS',
+    // Main app
+    card_location:    'Τοποθεσία παρατήρησης',
+    btn_change:       '✎ Αλλαγή',
+    card_params:      'Παράμετροι',
+    lbl_date:         'Ημερομηνία παρατήρησης',
+    lbl_day:          'Ημέρα',
+    lbl_month:        'Μήνας',
+    lbl_year:         'Έτος',
+    dst_summer:       'Θερινή',
+    dst_hour:         'ώρα',
+    dst_winter:       'Χειμερινή',
+    btn_calc:         '⟳ Υπολογισμός',
+    card_correction:  'Διόρθωση ώρας',
+    card_sky:         'Χάρτης Βόρειου Ουρανού',
+    leg_polaris:      'Πολικός (α UMi)',
+    leg_dubhe:        'Dubhe (α UMa)',
+    leg_merak:        'Merak (β UMa)',
+    leg_pointer:      'Δείκτης',
+    btn_save_obs:     '💾 Αποθήκευση παρατήρησης & προσθήκη πινέζας στον χάρτη',
+    card_angles:      'Γωνίες & υπολογισμένες ώρες',
+    card_steps:       'Βήματα υπολογισμού',
+    // Steps
+    step1: 'Βρίσκω την <strong>πλησιέστερη βασική ημερομηνία</strong> (ισημερία / ηλιοστάσιο):',
+    step2: 'Μετράω ημέρες απόστασης (1 ημέρα = 1°):',
+    step3: 'Μετατρέπω σε ώρες:',
+    step4: 'Παρατηρώ τον ουρανό και μετράω τη γωνία <strong>αντιωρολογιακά</strong> από την κατακόρυφο (ζενίθ) που διέρχεται από τον Πολικό, μέχρι τη γραμμή των δύο αστέρων Dubhe–Merak. <em>Κορυφή γωνίας: Πολικός αστέρας.</em>',
+    step5_formula: 'Τύπος:',
+    step5_formula_text: 'γωνία<sub>αντιωρ.</sub> ÷ 15 + σταθερά = τοπική ώρα',
+    step6_title: '<strong>Πηγές απόκλισης από το ρολόι:</strong>',
+    // Correction display labels
+    corr_ref:     'Πλησιέστερη αναφορά',
+    corr_dist:    'Απόσταση',
+    corr_days:    'ημέρες',
+    corr_fix:     'Διόρθωση',
+    corr_zone:    'Ζώνη ώρας',
+    corr_summer:  'Θερινή',
+    corr_winter:  'Χειμερινή',
+    // Canvas info
+    obs_hour:     'Ώρα παρατήρησης',
+    angle_ccw:    'αντιωρολογιακά',
+    from_zenith:  'από κατακόρυφο',
+    calculated:   'Υπολογισμένη',
+    // Step5 table
+    s5_angle:     'Μετρημένη γωνία (αντιωρολογιακά):',
+    s5_hours:     'Σε ώρες (÷15):',
+    s5_const:     'Σταθερά ημερ./τοποθ.:',
+    s5_result:    'Αποτέλεσμα:',
+    s5_obstime:   'παρατήρηση',
+    // Clock explain
+    clock_title:  '<strong>Γιατί αφαιρούμε από 360°;</strong>',
+    clock_green:  'Αντιωρολογιακά:',
+    clock_orange: 'Ωρολογιακά:',
+    clock_pointer:'Δείκτης Dubhe–Merak',
+  },
+  en: {
+    app_title:        'Educators\' Astrolabe',
+    app_subtitle:     'Estimating nighttime from the Great Bear',
+    auth_intro:       'Sign in to save your observations.',
+    tab_login:        'Sign In',
+    tab_register:     'Register',
+    btn_login_email:  'Sign In with Email',
+    btn_login_google: 'Sign In with Google',
+    no_account:       'Don\'t have an account?',
+    forgot_pass:      'Forgot password',
+    btn_register:     'Create account',
+    btn_reg_google:   'Register with Google',
+    have_account:     'Already have an account?',
+    btn_signout:      '↪ Sign Out',
+    btn_journal:      '📔 Journal',
+    btn_map:          '🗺️ Map',
+    journal_title:    '📔 My Observation Journal',
+    journal_desc:     'Your saved observations.',
+    map_title:        '🗺️ World Map of Observers',
+    map_desc:         'Educators and students using the Astrolabe around the world.',
+    map_pin_auto:     'Your pin is added automatically when you save an observation.',
+    btn_delete_pin:   '✕ Delete my pin',
+    loc_title:        '📍 Observation Location',
+    loc_intro:        'Your selection will be saved and won\'t need to be entered again.',
+    loc_username:     'Your name (will appear on the world map)',
+    loc_school:       'School (optional)',
+    tab_list:         '📋 List',
+    tab_manual:       '✏️ Coordinates',
+    tab_gps:          '📡 GPS',
+    lbl_country:      'Country',
+    lbl_city:         'City',
+    btn_select:       '✓ Select',
+    lbl_lat:          'Latitude (e.g. 36.89)',
+    lbl_lon:          'Longitude (e.g. 27.28)',
+    lbl_locname:      'Location name (optional)',
+    gps_note:         '📋 Note about GPS:',
+    gps_https:        'Location detection only works when the app runs via <strong>https://</strong> (e.g. GitHub Pages) or <strong>localhost</strong>.',
+    gps_file:         'If you open the file directly (file://), the browser automatically denies permission.',
+    gps_alt:          '<strong>Alternatively:</strong> use the List tab or find your coordinates on Google Maps and enter them manually.',
+    btn_gps_try:      '📡 Try GPS detection',
+    btn_gps_save:     '✓ Save GPS location',
+    card_location:    'Observation Location',
+    btn_change:       '✎ Change',
+    card_params:      'Parameters',
+    lbl_date:         'Observation date',
+    lbl_day:          'Day',
+    lbl_month:        'Month',
+    lbl_year:         'Year',
+    dst_summer:       'Summer',
+    dst_hour:         'time',
+    dst_winter:       'Winter',
+    btn_calc:         '⟳ Calculate',
+    card_correction:  'Time Correction',
+    card_sky:         'Northern Sky Map',
+    leg_polaris:      'Polaris (α UMi)',
+    leg_dubhe:        'Dubhe (α UMa)',
+    leg_merak:        'Merak (β UMa)',
+    leg_pointer:      'Pointer',
+    btn_save_obs:     '💾 Save observation & add pin to map',
+    card_angles:      'Angles & calculated times',
+    card_steps:       'Calculation steps',
+    step1: 'Find the <strong>nearest reference date</strong> (equinox / solstice):',
+    step2: 'Count days of difference (1 day = 1°):',
+    step3: 'Convert to hours:',
+    step4: 'Observe the sky and measure the angle <strong>counter-clockwise</strong> from the vertical (zenith) passing through Polaris, to the line of the two stars Dubhe–Merak. <em>Angle vertex: Polaris.</em>',
+    step5_formula: 'Formula:',
+    step5_formula_text: 'angle<sub>CCW</sub> ÷ 15 + constant = local time',
+    step6_title: '<strong>Sources of deviation from the clock:</strong>',
+    corr_ref:     'Nearest reference',
+    corr_dist:    'Distance',
+    corr_days:    'days',
+    corr_fix:     'Correction',
+    corr_zone:    'Time zone',
+    corr_summer:  'Summer',
+    corr_winter:  'Winter',
+    obs_hour:     'Observation time',
+    angle_ccw:    'counter-clockwise',
+    from_zenith:  'from zenith',
+    calculated:   'Calculated',
+    s5_angle:     'Measured angle (counter-clockwise):',
+    s5_hours:     'In hours (÷15):',
+    s5_const:     'Date/location constant:',
+    s5_result:    'Result:',
+    s5_obstime:   'observation',
+    clock_title:  '<strong>Why subtract from 360°?</strong>',
+    clock_green:  'Counter-clockwise:',
+    clock_orange: 'Clockwise:',
+    clock_pointer:'Dubhe–Merak pointer',
+  }
+};
+
+let currentLang = localStorage.getItem('astrolab_lang') || 'el';
+
+function t(key){ return (LANG_DATA[currentLang] && LANG_DATA[currentLang][key]) || LANG_DATA['el'][key] || key; }
+
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    const val = t(key);
+    if(el.tagName==='INPUT' && el.placeholder!==undefined) el.placeholder = val;
+    else el.innerHTML = val;
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPh);
+  });
+  // Ενημέρωση κουμπιού γλώσσας
+  const btn = document.getElementById('langToggle');
+  if(btn) btn.textContent = currentLang === 'el' ? 'EN' : 'ΕΛ';
+  // HTML lang attribute
+  document.documentElement.lang = currentLang;
+}
+
+function toggleLang(){
+  currentLang = currentLang === 'el' ? 'en' : 'el';
+  localStorage.setItem('astrolab_lang', currentLang);
+  applyLang();
+  // Ανανέωση δυναμικού περιεχομένου αν υπάρχει υπολογισμός
+  if(hourData.length > 0) drawSky(currentHour);
+}
+
 let locState = { lat:null, lon:null, name:null };
 let gpsResult = null;
 let dstOn = false;
@@ -1205,6 +1443,7 @@ let globalCDate = 0;
 
 // ── Init ──
 function runInit(){
+  applyLang();
   startQuoteRotation();
   try {
     populateCountries();
@@ -1820,13 +2059,13 @@ function drawSky(hour){
   ctx.moveTo(dXY2.x,dXY2.y); ctx.lineTo(b4XY.x,b4XY.y);
   ctx.lineTo(b3XY.x,b3XY.y); ctx.lineTo(mXY2.x,mXY2.y);
   ctx.closePath();
-  ctx.strokeStyle='rgba(100,155,230,.45)'; ctx.lineWidth=1.8; ctx.stroke();
+  ctx.strokeStyle='rgba(150,200,255,0.85)'; ctx.lineWidth=2.2; ctx.stroke();
 
   // Λαβή
   ctx.beginPath();
   ctx.moveTo(b4XY.x,b4XY.y);
   ctx.lineTo(aliXY.x,aliXY.y); ctx.lineTo(mizXY.x,mizXY.y); ctx.lineTo(alkXY.x,alkXY.y);
-  ctx.strokeStyle='rgba(100,155,230,.35)'; ctx.lineWidth=1.5; ctx.stroke();
+  ctx.strokeStyle='rgba(150,200,255,0.85)'; ctx.lineWidth=2.2; ctx.stroke();
 
   // ── ΜΙΚΡΗ ΑΡΚΤΟΣ ──
   const umiPositions = UMI_STARS.map(s => {

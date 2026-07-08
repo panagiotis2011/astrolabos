@@ -653,8 +653,8 @@ select option{background:#071625;color:#ddeeff;}
 
     <!-- Login -->
     <div class="auth-pane active" id="auth-login">
-      <input class="auth-input" type="email" id="loginEmail" placeholder="Email">
-      <input class="auth-input" type="password" id="loginPass" placeholder="Κωδικός">
+      <input class="auth-input" type="email" id="loginEmail" placeholder="Email" data-i18n-ph="ph_email">
+      <input class="auth-input" type="password" id="loginPass" placeholder="Κωδικός" data-i18n-ph="ph_password">
       <button class="btn btn-primary" style="margin-top:4px;" onclick="emailLogin()"><span data-i18n="btn_login_email">Σύνδεση με Email</span></button>
       <div class="auth-divider">ή</div>
       <button class="btn-google" onclick="googleLogin()">
@@ -662,13 +662,13 @@ select option{background:#071625;color:#ddeeff;}
         <span data-i18n="btn_login_google">Σύνδεση με Google</span>
       </button>
       <div class="auth-err" id="loginErr"></div>
-      <div class="auth-switch"><span data-i18n="no_account">Δεν έχεις λογαριασμό;</span> <a onclick="authTab('register')">Εγγραφή</a> &nbsp;|&nbsp; <a onclick="forgotPassword()"><span data-i18n="forgot_pass">Ξέχασα τον κωδικό</span></a></div>
+      <div class="auth-switch"><span data-i18n="no_account">Δεν έχεις λογαριασμό;</span> <a onclick="authTab('register')"><span data-i18n="tab_register">Εγγραφή</span></a> &nbsp;|&nbsp; <a onclick="forgotPassword()"><span data-i18n="forgot_pass">Ξέχασα τον κωδικό</span></a></div>
     </div>
 
     <!-- Register -->
     <div class="auth-pane" id="auth-register">
-      <input class="auth-input" type="email" id="regEmail" placeholder="Email">
-      <input class="auth-input" type="password" id="regPass" placeholder="Κωδικός (min 6 χαρακτήρες)">
+      <input class="auth-input" type="email" id="regEmail" placeholder="Email" data-i18n-ph="ph_email">
+      <input class="auth-input" type="password" id="regPass" placeholder="Κωδικός (min 6 χαρακτήρες)" data-i18n-ph="ph_password_reg">
       <button class="btn btn-primary" style="margin-top:4px;" onclick="emailRegister()"><span data-i18n="btn_register">Δημιουργία λογαριασμού</span></button>
       <div class="auth-divider">ή</div>
       <button class="btn-google" onclick="googleLogin()">
@@ -736,9 +736,9 @@ select option{background:#071625;color:#ddeeff;}
     <input type="text" id="setupSchool" placeholder="π.χ. Εσπερινό Γυμνάσιο Κω" data-i18n-ph="loc_school" maxlength="60">
 
     <div class="tabs" style="margin-top:18px;">
-      <button class="tab-btn active" onclick="switchTab('list')">📋 Λίστα</button>
-      <button class="tab-btn" onclick="switchTab('manual')">✏️ Συντεταγμένες</button>
-      <button class="tab-btn" onclick="switchTab('gps')">📡 GPS</button>
+      <button class="tab-btn active" onclick="switchTab('list')"><span data-i18n="tab_list">📋 Λίστα</span></button>
+      <button class="tab-btn" onclick="switchTab('manual')"><span data-i18n="tab_manual">✏️ Συντεταγμένες</span></button>
+      <button class="tab-btn" onclick="switchTab('gps')"><span data-i18n="tab_gps">📡 GPS</span></button>
     </div>
 
     <!-- TAB: LIST -->
@@ -747,17 +747,17 @@ select option{background:#071625;color:#ddeeff;}
       <select id="countrySelect" onchange="onCountryChange()"></select>
       <label class="field-label" data-i18n="lbl_city">Πόλη</label>
       <select id="citySelect"></select>
-      <button class="btn btn-primary" onclick="saveFromList()">✓ Επιλογή</button>
+      <button class="btn btn-primary" onclick="saveFromList()"><span data-i18n="btn_select">✓ Επιλογή</span></button>
     </div>
 
     <!-- TAB: MANUAL -->
     <div class="tab-pane" id="tab-manual">
       <label class="field-label">Γεωγραφικό πλάτος (π.χ. 36.89)</label>
-      <input type="number" id="manLat" placeholder="36.89" step="0.0001" min="-90" max="90">
+      <input type="number" id="manLat" data-i18n-ph="ph_lat" placeholder="36.89" step="0.0001" min="-90" max="90">
       <label class="field-label">Γεωγραφικό μήκος (π.χ. 27.28)</label>
-      <input type="number" id="manLon" placeholder="27.28" step="0.0001" min="-180" max="180">
+      <input type="number" id="manLon" data-i18n-ph="ph_lon" placeholder="27.28" data-i18n-ph="lbl_lon" step="0.0001" min="-180" max="180">
       <label class="field-label">Όνομα τοποθεσίας (προαιρετικό)</label>
-      <input type="text" id="manName" placeholder="π.χ. Κως">
+      <input type="text" id="manName" data-i18n-ph="ph_locname" placeholder="π.χ. Κως" data-i18n-ph="lbl_locname">
       <button class="btn btn-primary" onclick="saveManual()">✓ Επιλογή</button>
     </div>
 
@@ -1269,6 +1269,19 @@ const LANG_DATA = {
     btn_reg_google:   'Εγγραφή με Google',
     have_account:     'Έχεις ήδη λογαριασμό;',
     btn_signout:      '↪ Έξοδος',
+    ph_email:         'Email',
+    ph_password:      'Κωδικός',
+    ph_password_reg:  'Κωδικός (min 6 χαρακτήρες)',
+    ph_lat:           'π.χ. 36.89',
+    ph_lon:           'π.χ. 27.28',
+    ph_locname:       'π.χ. Κως',
+    ph_city_select:   '— Επέλεξε πόλη —',
+    alert_select_city:'Παρακαλώ επίλεξε πρώτα μια πόλη.',
+    alert_enter_name: 'Παρακαλώ γράψε το όνομά σου πριν συνεχίσεις.',
+    dst_summer_label: 'Θερινή',
+    dst_winter_label: 'Χειμερινή',
+    utc_label:        'UTC',
+
     btn_journal:      '📔 Ημερολόγιο',
     btn_map:          '🗺️ Χάρτης',
     // Journal
@@ -1367,6 +1380,19 @@ const LANG_DATA = {
     btn_reg_google:   'Register with Google',
     have_account:     'Already have an account?',
     btn_signout:      '↪ Sign Out',
+    ph_email:         'Email',
+    ph_password:      'Password',
+    ph_password_reg:  'Password (min 6 characters)',
+    ph_lat:           'e.g. 36.89',
+    ph_lon:           'e.g. 27.28',
+    ph_locname:       'e.g. Kos',
+    ph_city_select:   '— Select city —',
+    alert_select_city:'Please select a city first.',
+    alert_enter_name: 'Please enter your name before continuing.',
+    dst_summer_label: 'Summer',
+    dst_winter_label: 'Winter',
+    utc_label:        'UTC',
+
     btn_journal:      '📔 Journal',
     btn_map:          '🗺️ Map',
     journal_title:    '📔 My Observation Journal',
@@ -1463,6 +1489,19 @@ function applyLang(){
   if(btn) btn.textContent = currentLang === 'el' ? 'EN' : 'ΕΛ';
   // HTML lang attribute
   document.documentElement.lang = currentLang;
+  // Ανανέωση μηνών
+  const msel = document.getElementById('monthSelect');
+  if(msel){
+    const cur = msel.value;
+    msel.innerHTML = getMonthNames().map((m,i)=>
+      `<option value="${i+1}">${m}</option>`).join('');
+    msel.value = cur;
+  }
+  // Ανανέωση city placeholder
+  const csel = document.getElementById('citySelect');
+  if(csel && csel.options[0] && csel.options[0].value===''){
+    csel.options[0].text = t('ph_city_select');
+  }
 }
 
 function toggleLang(){
@@ -1550,7 +1589,7 @@ function populateCountries(){
 function onCountryChange(){
   const code = document.getElementById('countrySelect').value;
   const citysel = document.getElementById('citySelect');
-  citysel.innerHTML='<option value="" disabled selected>— Επέλεξε πόλη —</option>';
+  citysel.innerHTML='<option value="" disabled selected>'+ t('ph_city_select') +'</option>';
   const sortedCities = [...CITIES_DB[code].cities].sort((a,b)=>
     a.name.localeCompare(b.name, 'el'));
   sortedCities.forEach(c=>{
@@ -1576,7 +1615,7 @@ function saveManual(){
   const lon = parseFloat(document.getElementById('manLon').value);
   const name = document.getElementById('manName').value.trim() || `${lat.toFixed(3)}°, ${lon.toFixed(3)}°`;
   if(isNaN(lat)||isNaN(lon)||lat<-90||lat>90||lon<-180||lon>180){
-    alert('Παρακαλώ δώσε έγκυρες συντεταγμένες.');
+    alert(t('alert_select_city'));
     return;
   }
   saveLocation(lat, lon, name);
@@ -1621,7 +1660,7 @@ function saveLocation(lat,lon,name){
   const userName = document.getElementById('setupUserName').value.trim();
   const school    = document.getElementById('setupSchool').value.trim();
   if(!userName){
-    alert('Παρακαλώ γράψε το όνομά σου πριν συνεχίσεις.');
+    alert(t('alert_enter_name'));
     document.getElementById('setupUserName').focus();
     return;
   }
@@ -1647,8 +1686,9 @@ function updateLocationBadge(){
 // ═══════════════════════════════════════════════
 // DATE & DST
 // ═══════════════════════════════════════════════
-const MONTH_NAMES = ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος',
-                      'Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
+const MONTH_NAMES_EL = ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
+const MONTH_NAMES_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function getMonthNames(){ return currentLang==='en' ? MONTH_NAMES_EN : MONTH_NAMES_EL; }
 
 function daysInMonth(month, year){ return new Date(year, month, 0).getDate(); }
 
@@ -1717,10 +1757,10 @@ function updateDSTUI(){
   const lbl = document.getElementById('dstLabel');
   if(dstOn){
     tog.classList.add('on');
-    lbl.innerHTML='Θερινή<br><small>UTC+3</small>';
+    lbl.innerHTML=t('dst_summer_label')+'<br><small>UTC+3</small>';
   } else {
     tog.classList.remove('on');
-    lbl.innerHTML='Χειμερινή<br><small>UTC+2</small>';
+    lbl.innerHTML=t('dst_winter_label')+'<br><small>UTC+2</small>';
   }
 }
 
@@ -2165,7 +2205,7 @@ function drawSky(hour){
   }
 
   // Πολικός στο κέντρο
-  drawStar(pXY2, STARS.polaris, 'Πολικός', true);
+  drawStar(pXY2, STARS.polaris, currentLang==='en'?'Polaris':'Πολικός', true);
   drawStar(dXY2, STARS.dubhe,   'Dubhe',   false);
   drawStar(mXY2, STARS.merak,   'Merak',   true);
 
@@ -2263,10 +2303,10 @@ function drawSky(hour){
   const cH = Math.floor(d.calcTime), cM = Math.round((d.calcTime%1)*60);
   const timeStr = cH.toString().padStart(2,'0')+':'+cM.toString().padStart(2,'0');
   document.getElementById('canvasInfo').innerHTML=
-    `<strong>Ώρα παρατήρησης: ${d.hour.toString().padStart(2,'0')}:00</strong>`+
-    ` &nbsp;|&nbsp; Γωνία <strong style="color:var(--pointer);">αντιωρολογιακά</strong>: `+
-    `<strong style="font-size:1.1em">${d.ccwDeg}°</strong> από κατακόρυφο`+
-    ` &nbsp;|&nbsp; Υπολογισμένη: <strong style="color:var(--gold)">${timeStr}</strong>`;
+    `<strong>${t('obs_hour')}: ${d.hour.toString().padStart(2,'0')}:00</strong>`+
+    ` &nbsp;|&nbsp; ${t('angle_ccw')}: `+
+    `<strong style="font-size:1.1em">${d.ccwDeg}°</strong> ${t('from_zenith')}`+
+    ` &nbsp;|&nbsp; ${t('calculated')}: <strong style="color:var(--gold)">${timeStr}</strong>`;
 
   updateStep5(d);
 
@@ -2416,22 +2456,22 @@ function updateStep5(d){
   el.innerHTML = `
     <table style="width:100%;border-collapse:collapse;font-size:.97rem;">
       <tr>
-        <td style="color:var(--text2);padding:3px 8px 3px 0;white-space:nowrap;">Μετρημένη γωνία (αντιωρ.):</td>
+        <td style="color:var(--text2);padding:3px 8px 3px 0;white-space:nowrap;">${t('s5_angle')}</td>
         <td><span class="eq">${ccw}°</span></td>
       </tr>
       <tr>
-        <td style="color:var(--text2);padding:3px 8px 3px 0;white-space:nowrap;">Σε ώρες (÷15):</td>
-        <td><span class="eq">${ccw}° ÷ 15 = ${rawH.toFixed(2)} ω</span></td>
+        <td style="color:var(--text2);padding:3px 8px 3px 0;white-space:nowrap;">${t('s5_hours')}</td>
+        <td><span class="eq">${ccw}° ÷ 15 = ${rawH.toFixed(2)} ${currentLang==='en'?'h':'ω'}</span></td>
       </tr>
       <tr>
-        <td style="color:var(--text2);padding:3px 8px 3px 0;white-space:nowrap;">Σταθερά ημερ./τοποθ.:</td>
+        <td style="color:var(--text2);padding:3px 8px 3px 0;white-space:nowrap;">${t('s5_const')}</td>
         <td><span class="eq">+ ${CInt}ω ${CMin}λ</span> <small style="color:var(--text2)">(${C_date.toFixed(3)} ω)</small></td>
       </tr>
       <tr style="border-top:1px solid var(--border);">
-        <td style="color:var(--text2);padding:6px 8px 2px 0;white-space:nowrap;">Αποτέλεσμα:</td>
+        <td style="color:var(--text2);padding:6px 8px 2px 0;white-space:nowrap;">${t('s5_result')}</td>
         <td style="padding-top:6px;">
           <strong style="color:var(--gold);font-size:1.2em;">≈ ${timeStr}</strong>
-          <small style="color:var(--text2);margin-left:8px;">(παρατήρηση: ${hourLabel})</small>
+          <small style="color:var(--text2);margin-left:8px;">(${t('s5_obstime')}: ${hourLabel})</small>
         </td>
       </tr>
     </table>`;

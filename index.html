@@ -1393,6 +1393,15 @@ const LANG_DATA = {
     clock_title:  '<strong>Γιατί αφαιρούμε από 360°;</strong>',
     clock_green:  'Αντιωρολογιακά:',
     clock_orange: 'Ωρολογιακά:',
+    clock_explain_1: 'Βλέπουμε τη γωνία',
+    clock_explain_2: 'αντιωρολογιακά',
+    clock_explain_3: '(πράσινο τόξο). Αλλά ο ουρανός γυρίζει',
+    clock_explain_4: 'ωρολογιακά',
+    clock_explain_5: '— άρα η αντίστοιχη ωρολογιακή γωνία είναι',
+    clock_explain_6: '(πορτοκαλί τόξο).',
+    clock_const: 'σταθ.',
+    clock_polaris_label: 'Πολικός',
+
 
     zenith_label:  'ζενίθ (0°)',
     ccw_label:     'αντιωρολογιακά',
@@ -1530,6 +1539,15 @@ const LANG_DATA = {
     clock_title:  '<strong>Why subtract from 360°?</strong>',
     clock_green:  'Counter-clockwise:',
     clock_orange: 'Clockwise:',
+    clock_explain_1: 'We see the angle',
+    clock_explain_2: 'counter-clockwise',
+    clock_explain_3: '(green arc). But the sky rotates',
+    clock_explain_4: 'clockwise',
+    clock_explain_5: '— so the corresponding clockwise angle is',
+    clock_explain_6: '(orange arc).',
+    clock_const: 'const.',
+    clock_polaris_label: 'Polaris',
+
 
     zenith_label:  'zenith (0°)',
     ccw_label:     'counter-clockwise',
@@ -1780,7 +1798,7 @@ function saveLocation(lat,lon,name){
 function updateLocationBadge(){
   document.getElementById('locName').textContent = locState.name || '—';
   document.getElementById('locCoords').textContent =
-    locState.lat!=null ? `${locState.lat.toFixed(4)}° Β,  ${locState.lon.toFixed(4)}° Α` : '—';
+    locState.lat!=null ? `${locState.lat.toFixed(4)}° ${currentLang==='en'?'N':'Β'},  ${locState.lon.toFixed(4)}° ${currentLang==='en'?'E':'Α'}` : '—';
 }
 
 // ═══════════════════════════════════════════════
@@ -2112,7 +2130,7 @@ function renderHoursGrid(){
     const calcLabel=cH.toString().padStart(2,'0')+':'+cM.toString().padStart(2,'0');
     const card=document.createElement('div');
     card.className='hcard'+(h.hour===currentHour?' active':'');
-    card.innerHTML=`<div class="hc-t">${label}</div><div class="hc-a">${h.ccwDeg}° αντιωρ.</div><div class="hc-c">≈ ${calcLabel}</div>`;
+    card.innerHTML=`<div class="hc-t">${label}</div><div class="hc-a">${h.ccwDeg}° ${currentLang==='en'?'CCW':'αντιωρ.'}</div><div class="hc-c">≈ ${calcLabel}</div>`;
     card.onclick=()=>{
       currentHour=h.hour;
       document.querySelectorAll('.hcard').forEach(c=>c.classList.remove('active'));
@@ -2460,12 +2478,12 @@ function drawClockExplain(ccwDeg, C_date){
   div.innerHTML = `
   <div style="background:#071625;border:1px solid var(--border);border-radius:12px;padding:18px 16px;margin-top:4px;">
     <div style="font-size:.88rem;color:var(--text2);margin-bottom:12px;line-height:1.7;">
-      <strong style="color:var(--text);">Γιατί αφαιρούμε από 360°;</strong><br>
-      Βλέπουμε τη γωνία <strong style="color:#4ecf8a;">${ccwDeg}° αντιωρολογιακά</strong> (πράσινο τόξο).
-      Αλλά ο ουρανός γυρίζει <strong style="color:#f0a040;">ωρολογιακά</strong> — άρα η αντίστοιχη
-      ωρολογιακή γωνία είναι <strong style="color:#f0a040;">${cw}°</strong> (πορτοκαλί τόξο).<br>
-      <span class="eq">${ccwDeg}° ÷ 15 = ${hr} ω</span> &nbsp;+&nbsp;
-      <span class="eq">σταθ. ${(C_date||0).toFixed(2)} ω</span> &nbsp;=&nbsp;
+      ${t('clock_title')}<br>
+      ${t('clock_explain_1')} <strong style="color:#4ecf8a;">${ccwDeg}° ${t('clock_explain_2')}</strong>
+      ${t('clock_explain_3')} <strong style="color:#f0a040;">${t('clock_explain_4')}</strong>
+      ${t('clock_explain_5')} <strong style="color:#f0a040;">${cw}°</strong> ${t('clock_explain_6')}<br>
+      <span class="eq">${ccwDeg}° ÷ 15 = ${hr} ${t('hours_unit')}</span> &nbsp;+&nbsp;
+      <span class="eq">${t('clock_const')} ${(C_date||0).toFixed(2)} ${t('hours_unit')}</span> &nbsp;=&nbsp;
       <strong style="color:var(--gold)">≈ ${timeStr}</strong>
     </div>
     <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
@@ -2493,7 +2511,7 @@ function drawClockExplain(ccwDeg, C_date){
 
         <!-- Πολικός στο κέντρο -->
         <circle cx="${cx}" cy="${cy}" r="6" fill="#ffe080"/>
-        <text x="${cx+9}" y="${cy+4}" fill="#ffe080" font-size="11" font-family="sans-serif">Πολικός</text>
+        <text x="${cx+9}" y="${cy+4}" fill="#ffe080" font-size="11" font-family="sans-serif">${t('clock_polaris_label')}</text>
 
         <!-- Ζενίθ label -->
         <text x="${cx}" y="${topY-12}" text-anchor="middle" fill="#f0d060"
@@ -2523,11 +2541,11 @@ function drawClockExplain(ccwDeg, C_date){
 
       <div style="font-size:.88rem;line-height:2;color:var(--text2);padding-top:4px;">
         <div><span style="display:inline-block;width:14px;height:4px;background:#4ecf8a;border-radius:2px;margin-right:6px;vertical-align:middle;"></span>
-          Αντιωρολογιακά: <strong style="color:#4ecf8a;">${ccwDeg}°</strong></div>
+          ${t('clock_green')} <strong style="color:#4ecf8a;">${ccwDeg}°</strong></div>
         <div><span style="display:inline-block;width:14px;height:4px;background:#f0a040;border-radius:2px;margin-right:6px;vertical-align:middle;"></span>
-          Ωρολογιακά: <strong style="color:#f0a040;">${cw}°</strong></div>
+          ${t('clock_orange')} <strong style="color:#f0a040;">${cw}°</strong></div>
         <div><span style="display:inline-block;width:14px;height:4px;background:#ff9d3d;border-radius:2px;margin-right:6px;vertical-align:middle;"></span>
-          Δείκτης Dubhe–Merak</div>
+          ${t('clock_pointer')}</div>
         <div style="margin-top:10px;padding:8px 10px;background:#0a1828;border-radius:7px;border-left:3px solid #f0a040;">
           <span class="eq" style="font-size:.95rem;">360° − ${ccwDeg}° = ${cw}°</span><br>
           <span class="eq" style="font-size:.95rem;">${cw}° ÷ 15 = ${hr} ω</span>
@@ -2727,9 +2745,13 @@ try {
       const photo = document.getElementById('userPhoto');
       if (user.photoURL) { photo.src = user.photoURL; photo.style.display = 'block'; }
       if (window._pendingMapPin) { window._pendingMapPin = false; addMapPin(); }
+      const lt = document.getElementById('langToggle');
+      if (lt) lt.style.display = 'none';
     } else {
       document.getElementById('authOverlay').style.display = 'flex';
       document.getElementById('userBadge').style.display   = 'none';
+      const lt = document.getElementById('langToggle');
+      if (lt) lt.style.display = 'flex';
     }
   });
 } catch(e) {
@@ -2896,42 +2918,4 @@ function showWorldMap(){
         ${p.school?'<small>'+escapeHtml(p.school)+'</small><br>':''}
         <small>${escapeHtml(p.locationName||'')}</small>`;
       L.marker([p.lat,p.lon],{icon}).addTo(worldMapInstance).bindPopup(popup);
-    });
-  }).catch(e => console.error('Load pins failed:',e));
-}
-
-function hideWorldMap(){
-  document.getElementById('mapOverlay').style.display = 'none';
-}
-
-function deleteMyPin(){
-  if(!currentUser){ alert('Πρέπει να είσαι συνδεδεμένος.'); return; }
-  if(!confirm('Διαγραφή της πινέζας σου από τον παγκόσμιο χάρτη;')) return;
-  db.collection('mapPins').where('uid','==',currentUser.uid).get()
-    .then(snap => {
-      if(snap.empty){ alert('Δεν βρέθηκε πινέζα.'); return; }
-      const batch = db.batch();
-      snap.forEach(d => batch.delete(d.ref));
-      return batch.commit();
     })
-    .then(() => {
-      alert('✓ Η πινέζα σου διαγράφηκε.');
-      // Σωστή καταστροφή χάρτη
-      if (worldMapInstance) {
-        worldMapInstance.remove();
-        worldMapInstance = null;
-      }
-      showWorldMap();
-    })
-    .catch(e => alert('Σφάλμα: ' + e.message));
-}
-
-function escapeHtml(str){
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
-</script>
-
-</body>
-</html>

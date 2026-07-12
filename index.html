@@ -624,20 +624,27 @@ select option{background:#071625;color:#ddeeff;}
 /* ── LANG TOGGLE ── */
 #langToggle{
   position:fixed;top:12px;left:12px;
-  background:var(--panel);border:1px solid var(--border);
-  border-radius:8px;padding:6px 12px;
-  font-family:'Cinzel',serif;font-size:.85rem;font-weight:700;
+  background:var(--accent);border:2px solid var(--gold);
+  border-radius:10px;padding:9px 16px;
+  font-family:'Cinzel',serif;font-size:.95rem;font-weight:700;
   color:var(--gold);cursor:pointer;
-  z-index:300;transition:.15s;
-  box-shadow:0 2px 12px rgba(0,0,0,.3);
+  z-index:300;transition:.2s;
+  box-shadow:0 3px 16px rgba(240,192,96,.25);
+  display:flex;align-items:center;gap:6px;
 }
-#langToggle:hover{border-color:var(--gold);background:var(--accent);}
+#langToggle:hover{
+  border-color:#fff;background:#2a5090;
+  box-shadow:0 4px 20px rgba(240,192,96,.4);
+  transform:scale(1.03);
+}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 </head>
 <body>
 
-<button id="langToggle" onclick="toggleLang()">EN</button>
+<button id="langToggle" onclick="toggleLang()" title="Switch language / Αλλαγή γλώσσας">
+  🌐 <span id="langToggleText">Ελληνικά</span>
+</button>
 
 <!-- ══════════ AUTH OVERLAY ══════════ -->
 <div id="authOverlay">
@@ -1154,6 +1161,9 @@ return new kd(this.curr.time,a,b)};$jscomp.global.Object.defineProperties(H.prot
 // ═══════════════════════════════════════════════
 const CITIES_DB = {"GR": {"name": "Ελλάδα", "cities": [{"name": "Αθήνα", "lat": 37.9838, "lon": 23.7275}, {"name": "Πειραιάς", "lat": 37.9421, "lon": 23.6465}, {"name": "Θεσσαλονίκη", "lat": 40.6401, "lon": 22.9444}, {"name": "Βέροια", "lat": 40.5236, "lon": 22.2048}, {"name": "Κιλκίς", "lat": 40.9938, "lon": 22.8754}, {"name": "Σέρρες", "lat": 41.0897, "lon": 23.5478}, {"name": "Πολύγυρος", "lat": 40.3756, "lon": 23.4378}, {"name": "Κατερίνη", "lat": 40.2697, "lon": 22.5021}, {"name": "Γιαννιτσά", "lat": 40.7886, "lon": 22.4156}, {"name": "Κοζάνη", "lat": 40.3006, "lon": 21.7892}, {"name": "Φλώρινα", "lat": 40.7832, "lon": 21.4075}, {"name": "Καστοριά", "lat": 40.5194, "lon": 21.268}, {"name": "Γρεβενά", "lat": 40.0833, "lon": 21.4265}, {"name": "Αλεξανδρούπολη", "lat": 40.8497, "lon": 25.8747}, {"name": "Κομοτηνή", "lat": 41.122, "lon": 25.4046}, {"name": "Ξάνθη", "lat": 41.1354, "lon": 24.888}, {"name": "Καβάλα", "lat": 40.9386, "lon": 24.4023}, {"name": "Δράμα", "lat": 41.1499, "lon": 24.1489}, {"name": "Ιωάννινα", "lat": 39.665, "lon": 20.8537}, {"name": "Πρέβεζα", "lat": 38.9579, "lon": 20.7522}, {"name": "Ηγουμενίτσα", "lat": 39.5003, "lon": 20.2664}, {"name": "Άρτα", "lat": 39.1601, "lon": 20.9851}, {"name": "Λάρισα", "lat": 39.639, "lon": 22.4191}, {"name": "Βόλος", "lat": 39.3667, "lon": 22.9333}, {"name": "Τρίκαλα", "lat": 39.556, "lon": 21.7682}, {"name": "Καρδίτσα", "lat": 39.3659, "lon": 21.9211}, {"name": "Λαμία", "lat": 38.8983, "lon": 22.4341}, {"name": "Χαλκίδα", "lat": 38.4636, "lon": 23.6036}, {"name": "Λιβαδειά", "lat": 38.4361, "lon": 22.8726}, {"name": "Αμφίκλεια", "lat": 38.6401, "lon": 22.5841}, {"name": "Καρπενήσι", "lat": 38.9235, "lon": 21.7876}, {"name": "Τρίπολη", "lat": 37.5084, "lon": 22.3791}, {"name": "Κόρινθος", "lat": 37.9402, "lon": 22.9282}, {"name": "Ναύπλιο", "lat": 37.5677, "lon": 22.8019}, {"name": "Καλαμάτα", "lat": 37.0389, "lon": 22.1141}, {"name": "Σπάρτη", "lat": 37.0739, "lon": 22.4285}, {"name": "Πύργος", "lat": 37.6741, "lon": 21.4368}, {"name": "Πάτρα", "lat": 38.2466, "lon": 21.7353}, {"name": "Μυτιλήνη", "lat": 39.1123, "lon": 26.5544}, {"name": "Χίος", "lat": 38.3672, "lon": 26.1367}, {"name": "Σάμος", "lat": 37.7519, "lon": 26.976}, {"name": "Ρόδος", "lat": 36.4349, "lon": 28.2176}, {"name": "Κως", "lat": 36.8923, "lon": 27.2877}, {"name": "Σύρος", "lat": 37.446, "lon": 24.9425}, {"name": "Νάξος", "lat": 37.1031, "lon": 25.3762}, {"name": "Ηράκλειο", "lat": 35.3387, "lon": 25.1442}, {"name": "Χανιά", "lat": 35.5138, "lon": 24.018}, {"name": "Ρέθυμνο", "lat": 35.3721, "lon": 24.4715}, {"name": "Άγιος Νικόλαος", "lat": 35.1896, "lon": 25.7166}, {"name": "Κέρκυρα", "lat": 39.6243, "lon": 19.9217}, {"name": "Αργοστόλι", "lat": 38.1729, "lon": 20.4871}, {"name": "Λευκάδα", "lat": 38.8333, "lon": 20.7052}, {"name": "Ζάκυνθος", "lat": 37.7906, "lon": 20.8952}]}, "CY": {"name": "Κύπρος", "cities": [{"name": "Λευκωσία", "lat": 35.1856, "lon": 33.3823}, {"name": "Λεμεσός", "lat": 34.6851, "lon": 33.0332}, {"name": "Λάρνακα", "lat": 34.9229, "lon": 33.6233}, {"name": "Πάφος", "lat": 34.7754, "lon": 32.4243}, {"name": "Αμμόχωστος", "lat": 35.1167, "lon": 33.95}, {"name": "Κερύνεια", "lat": 35.3417, "lon": 33.3192}]}, "IT": {"name": "Ιταλία", "cities": [{"name": "Ρώμη", "lat": 41.9028, "lon": 12.4964}, {"name": "Μιλάνο", "lat": 45.4642, "lon": 9.19}, {"name": "Νάπολη", "lat": 40.8518, "lon": 14.2681}, {"name": "Βενετία", "lat": 45.4408, "lon": 12.3155}, {"name": "Φλωρεντία", "lat": 43.7696, "lon": 11.2558}, {"name": "Μπολόνια", "lat": 44.4949, "lon": 11.3426}, {"name": "Τορίνο", "lat": 45.0703, "lon": 7.6869}, {"name": "Παλέρμο", "lat": 38.1157, "lon": 13.3615}]}, "DE": {"name": "Γερμανία", "cities": [{"name": "Βερολίνο", "lat": 52.52, "lon": 13.405}, {"name": "Μόναχο", "lat": 48.1351, "lon": 11.582}, {"name": "Αμβούργο", "lat": 53.5753, "lon": 10.0153}, {"name": "Κολωνία", "lat": 50.9375, "lon": 6.9603}, {"name": "Φρανκφούρτη", "lat": 50.1109, "lon": 8.6821}, {"name": "Στουτγάρδη", "lat": 48.7758, "lon": 9.1829}, {"name": "Ντίσελντορφ", "lat": 51.2277, "lon": 6.7735}, {"name": "Λειψία", "lat": 51.3397, "lon": 12.3731}]}, "FR": {"name": "Γαλλία", "cities": [{"name": "Παρίσι", "lat": 48.8566, "lon": 2.3522}, {"name": "Λυών", "lat": 45.764, "lon": 4.8357}, {"name": "Μασσαλία", "lat": 43.2965, "lon": 5.3698}, {"name": "Τουλούζη", "lat": 43.6047, "lon": 1.4442}, {"name": "Νίκαια", "lat": 43.7102, "lon": 7.262}, {"name": "Νάντη", "lat": 47.2184, "lon": -1.5536}, {"name": "Στρασβούργο", "lat": 48.5734, "lon": 7.7521}, {"name": "Μπορντό", "lat": 44.8378, "lon": -0.5792}]}, "GB": {"name": "Ηνωμένο Βασίλειο", "cities": [{"name": "Λονδίνο", "lat": 51.5074, "lon": -0.1278}, {"name": "Μάντσεστερ", "lat": 53.4808, "lon": -2.2426}, {"name": "Εδιμβούργο", "lat": 55.9533, "lon": -3.1883}, {"name": "Μπέρμιγχαμ", "lat": 52.4862, "lon": -1.8904}, {"name": "Γλασκώβη", "lat": 55.8642, "lon": -4.2518}, {"name": "Λίβερπουλ", "lat": 53.4084, "lon": -2.9916}, {"name": "Μπρίστολ", "lat": 51.4545, "lon": -2.5879}, {"name": "Καρδίφ", "lat": 51.4816, "lon": -3.1791}]}, "US": {"name": "ΗΠΑ", "cities": [{"name": "Νέα Υόρκη", "lat": 40.7128, "lon": -74.006}, {"name": "Λος Άντζελες", "lat": 34.0522, "lon": -118.2437}, {"name": "Σικάγο", "lat": 41.8781, "lon": -87.6298}, {"name": "Χιούστον", "lat": 29.7604, "lon": -95.3698}, {"name": "Φοίνιξ", "lat": 33.4484, "lon": -112.074}, {"name": "Φιλαδέλφεια", "lat": 39.9526, "lon": -75.1652}, {"name": "Σαν Φρανσίσκο", "lat": 37.7749, "lon": -122.4194}, {"name": "Βοστώνη", "lat": 42.3601, "lon": -71.0589}, {"name": "Σιάτλ", "lat": 47.6062, "lon": -122.3321}, {"name": "Ουάσιγκτον", "lat": 38.9072, "lon": -77.0369}]}, "AU": {"name": "Αυστραλία", "cities": [{"name": "Σίδνεϊ", "lat": -33.8688, "lon": 151.2093}, {"name": "Μελβούρνη", "lat": -37.8136, "lon": 144.9631}, {"name": "Μπρίσμπεϊν", "lat": -27.4698, "lon": 153.0251}, {"name": "Πέρθ", "lat": -31.9505, "lon": 115.8605}, {"name": "Αδελαΐδα", "lat": -34.9285, "lon": 138.6007}, {"name": "Καμπέρα", "lat": -35.2809, "lon": 149.13}]}, "CA": {"name": "Καναδάς", "cities": [{"name": "Τορόντο", "lat": 43.6532, "lon": -79.3832}, {"name": "Μόντρεαλ", "lat": 45.5017, "lon": -73.5673}, {"name": "Βανκούβερ", "lat": 49.2827, "lon": -123.1207}, {"name": "Οττάβα", "lat": 45.4215, "lon": -75.6972}, {"name": "Καλγκάρι", "lat": 51.0447, "lon": -114.0719}]}, "ES": {"name": "Ισπανία", "cities": [{"name": "Μαδρίτη", "lat": 40.4168, "lon": -3.7038}, {"name": "Βαρκελώνη", "lat": 41.3851, "lon": 2.1734}, {"name": "Βαλένθια", "lat": 39.4699, "lon": -0.3763}, {"name": "Σεβίλλη", "lat": 37.3891, "lon": -5.9845}, {"name": "Μπιλμπάο", "lat": 43.263, "lon": -2.935}]}, "TR": {"name": "Τουρκία", "cities": [{"name": "Κωνσταντινούπολη", "lat": 41.0082, "lon": 28.9784}, {"name": "Άγκυρα", "lat": 39.9334, "lon": 32.8597}, {"name": "Σμύρνη", "lat": 38.4237, "lon": 27.1428}, {"name": "Αττάλεια", "lat": 36.8969, "lon": 30.7133}]}, "EG": {"name": "Αίγυπτος", "cities": [{"name": "Κάιρο", "lat": 30.0444, "lon": 31.2357}, {"name": "Αλεξάνδρεια", "lat": 31.2001, "lon": 29.9187}, {"name": "Γκίζα", "lat": 30.0131, "lon": 31.2089}]}};
 
+const CITY_TRANSLATIONS = {"GR": {"name": "Greece", "cities": {"Αθήνα": "Athens", "Πειραιάς": "Piraeus", "Θεσσαλονίκη": "Thessaloniki", "Βέροια": "Veroia", "Κιλκίς": "Kilkis", "Σέρρες": "Serres", "Πολύγυρος": "Polygyros", "Κατερίνη": "Katerini", "Γιαννιτσά": "Giannitsa", "Κοζάνη": "Kozani", "Φλώρινα": "Florina", "Καστοριά": "Kastoria", "Γρεβενά": "Grevena", "Αλεξανδρούπολη": "Alexandroupoli", "Κομοτηνή": "Komotini", "Ξάνθη": "Xanthi", "Καβάλα": "Kavala", "Δράμα": "Drama", "Ιωάννινα": "Ioannina", "Πρέβεζα": "Preveza", "Ηγουμενίτσα": "Igoumenitsa", "Άρτα": "Arta", "Λάρισα": "Larissa", "Βόλος": "Volos", "Τρίκαλα": "Trikala", "Καρδίτσα": "Karditsa", "Λαμία": "Lamia", "Χαλκίδα": "Chalkida", "Λιβαδειά": "Livadeia", "Αμφίκλεια": "Amfikleia", "Καρπενήσι": "Karpenisi", "Τρίπολη": "Tripoli", "Κόρινθος": "Corinth", "Ναύπλιο": "Nafplio", "Καλαμάτα": "Kalamata", "Σπάρτη": "Sparta", "Πύργος": "Pyrgos", "Πάτρα": "Patras", "Μυτιλήνη": "Mytilene", "Χίος": "Chios", "Σάμος": "Samos", "Ρόδος": "Rhodes", "Κως": "Kos", "Σύρος": "Syros", "Νάξος": "Naxos", "Ηράκλειο": "Heraklion", "Χανιά": "Chania", "Ρέθυμνο": "Rethymno", "Άγιος Νικόλαος": "Agios Nikolaos", "Κέρκυρα": "Corfu", "Αργοστόλι": "Argostoli", "Λευκάδα": "Lefkada", "Ζάκυνθος": "Zakynthos"}}, "CY": {"name": "Cyprus", "cities": {"Λευκωσία": "Nicosia", "Λεμεσός": "Limassol", "Λάρνακα": "Larnaca", "Πάφος": "Paphos", "Αμμόχωστος": "Famagusta", "Κερύνεια": "Kyrenia"}}, "IT": {"name": "Italy", "cities": {"Ρώμη": "Rome", "Μιλάνο": "Milan", "Νάπολη": "Naples", "Βενετία": "Venice", "Φλωρεντία": "Florence", "Μπολόνια": "Bologna", "Τορίνο": "Turin", "Παλέρμο": "Palermo"}}, "DE": {"name": "Germany", "cities": {"Βερολίνο": "Berlin", "Μόναχο": "Munich", "Αμβούργο": "Hamburg", "Κολωνία": "Cologne", "Φρανκφούρτη": "Frankfurt", "Στουτγάρδη": "Stuttgart", "Ντίσελντορφ": "Düsseldorf", "Λειψία": "Leipzig"}}, "FR": {"name": "France", "cities": {"Παρίσι": "Paris", "Λυών": "Lyon", "Μασσαλία": "Marseille", "Τουλούζη": "Toulouse", "Νίκαια": "Nice", "Νάντη": "Nantes", "Στρασβούργο": "Strasbourg", "Μπορντό": "Bordeaux"}}, "GB": {"name": "United Kingdom", "cities": {"Λονδίνο": "London", "Μάντσεστερ": "Manchester", "Εδιμβούργο": "Edinburgh", "Μπέρμιγχαμ": "Birmingham", "Γλασκώβη": "Glasgow", "Λίβερπουλ": "Liverpool", "Μπρίστολ": "Bristol", "Καρδίφ": "Cardiff"}}, "US": {"name": "USA", "cities": {"Νέα Υόρκη": "New York", "Λος Άντζελες": "Los Angeles", "Σικάγο": "Chicago", "Χιούστον": "Houston", "Φοίνιξ": "Phoenix", "Φιλαδέλφεια": "Philadelphia", "Σαν Φρανσίσκο": "San Francisco", "Βοστώνη": "Boston", "Σιάτλ": "Seattle", "Ουάσιγκτον": "Washington"}}, "AU": {"name": "Australia", "cities": {"Σίδνεϊ": "Sydney", "Μελβούρνη": "Melbourne", "Μπρίσμπεϊν": "Brisbane", "Πέρθ": "Perth", "Αδελαΐδα": "Adelaide", "Καμπέρα": "Canberra"}}, "CA": {"name": "Canada", "cities": {"Τορόντο": "Toronto", "Μόντρεαλ": "Montreal", "Βανκούβερ": "Vancouver", "Οττάβα": "Ottawa", "Καλγκάρι": "Calgary"}}, "ES": {"name": "Spain", "cities": {"Μαδρίτη": "Madrid", "Βαρκελώνη": "Barcelona", "Βαλένθια": "Valencia", "Σεβίλλη": "Seville", "Μπιλμπάο": "Bilbao"}}, "TR": {"name": "Turkey", "cities": {"Κωνσταντινούπολη": "Istanbul", "Άγκυρα": "Ankara", "Σμύρνη": "Izmir", "Αττάλεια": "Antalya"}}, "EG": {"name": "Egypt", "cities": {"Κάιρο": "Cairo", "Αλεξάνδρεια": "Alexandria", "Γκίζα": "Giza"}}};
+
+
 // ═══════════════════════════════════════════════
 // LOCATION STATE
 // ═══════════════════════════════════════════════
@@ -1340,6 +1350,25 @@ const LANG_DATA = {
     step4: 'Παρατηρώ τον ουρανό και μετράω τη γωνία <strong>αντιωρολογιακά</strong> από την κατακόρυφο (ζενίθ) που διέρχεται από τον Πολικό, μέχρι τη γραμμή των δύο αστέρων Dubhe–Merak. <em>Κορυφή γωνίας: Πολικός αστέρας.</em>',
     step5_formula: 'Τύπος:',
     step5_formula_text: 'γωνία<sub>αντιωρ.</sub> ÷ 15 + σταθερά = τοπική ώρα',
+    step1_text: 'Βρίσκω την <strong>πλησιέστερη βασική ημερομηνία</strong> (ισημερία / ηλιοστάσιο):',
+    step2_text: 'Μετράω ημέρες απόστασης (1 ημέρα = 1°):',
+    step3_text: 'Μετατρέπω σε ώρες:',
+    step4_text: 'Παρατηρώ τον ουρανό και μετράω τη γωνία <strong>αντιωρολογιακά</strong> από την κατακόρυφο (ζενίθ) που διέρχεται από τον Πολικό, μέχρι τη γραμμή των δύο αστέρων Dubhe–Merak. <em>Κορυφή γωνίας: Πολικός αστέρας.</em>',
+    step5_placeholder: '— επίλεξε ώρα από τον χάρτη ή τα cards —',
+    step6_zone:  'Η ζώνη ώρας',
+    step6_taken: 'λαμβάνεται υπόψη στον υπολογισμό.',
+    step6_eqtime:'Η <strong>εξίσωση χρόνου</strong> (έως ±16 λεπτά, λόγω της ελλειπτικής τροχιάς της Γης) <em>δεν διορθώνεται</em> — μπορεί να εξηγεί μικρή απόκλιση.',
+    step6_error: 'Σφάλματα στην <strong>παρατήρηση της γωνίας</strong> (π.χ. ±5°) μεταφράζονται σε ±20 λεπτά απόκλιση.',
+    saving_text:   'Αποθήκευση...',
+    saved_text:    '✓ Αποθηκεύτηκε!',
+    journal_signin:'Συνδέσου για να δεις τις παρατηρήσεις σου.',
+    loading_text:  'Φόρτωση...',
+    journal_empty: 'Δεν έχεις αποθηκεύσει ακόμα παρατηρήσεις.',
+    btn_delete_short: '✕ Διαγραφή',
+    journal_angle:     'Γωνία',
+    journal_calculated:'Υπολογίστηκε',
+
+
     step6_title: '<strong>Πηγές απόκλισης από το ρολόι:</strong>',
     // Correction display labels
     corr_ref:     'Πλησιέστερη αναφορά',
@@ -1364,7 +1393,23 @@ const LANG_DATA = {
     clock_title:  '<strong>Γιατί αφαιρούμε από 360°;</strong>',
     clock_green:  'Αντιωρολογιακά:',
     clock_orange: 'Ωρολογιακά:',
-    clock_pointer:'Δείκτης Dubhe–Merak',
+
+    zenith_label:  'ζενίθ (0°)',
+    ccw_label:     'αντιωρολογιακά',
+    cw_label:      'ωρολογιακά',
+    corr_ref_lbl:  'Πλησιέστερη αναφορά',
+    corr_dist_lbl: 'Απόσταση',
+    corr_fix_lbl:  'Διόρθωση',
+    corr_zone_lbl: 'Ζώνη ώρας',
+    corr_pos_lbl:  'θέση',
+    lbl_lat_full:     'Γεωγραφικό πλάτος (π.χ. 36.89)',
+    lbl_lon_full:     'Γεωγραφικό μήκος (π.χ. 27.28)',
+    lbl_locname_full: 'Όνομα τοποθεσίας (προαιρετικό)',
+    gps_note_label: '📋 Σημείωση για το GPS:',
+    gps_https_text: 'Ο εντοπισμός λειτουργεί μόνο αν η εφαρμογή τρέχει μέσω <strong>https://</strong> (π.χ. GitHub Pages) ή <strong>localhost</strong>.',
+    gps_file_text:  'Αν ανοίγεις το αρχείο απευθείας (file://), ο browser απορρίπτει αυτόματα την άδεια.',
+    gps_alt_text:   '<strong>Εναλλακτικά:</strong> χρησιμοποίησε την καρτέλα «Λίστα» ή βρες τις συντεταγμένες σου από το Google Maps και βάλε τις χειροκίνητα.',
+  clock_pointer:'Δείκτης Dubhe–Merak',
   },
   en: {
     app_title:        'Educators\' Astrolabe',
@@ -1446,6 +1491,25 @@ const LANG_DATA = {
     step4: 'Observe the sky and measure the angle <strong>counter-clockwise</strong> from the vertical (zenith) passing through Polaris, to the line of the two stars Dubhe–Merak. <em>Angle vertex: Polaris.</em>',
     step5_formula: 'Formula:',
     step5_formula_text: 'angle<sub>CCW</sub> ÷ 15 + constant = local time',
+    step1_text: 'Find the <strong>nearest reference date</strong> (equinox / solstice):',
+    step2_text: 'Count days of difference (1 day = 1°):',
+    step3_text: 'Convert to hours:',
+    step4_text: 'Observe the sky and measure the angle <strong>counter-clockwise</strong> from the vertical (zenith) through Polaris, to the Dubhe–Merak line. <em>Angle vertex: Polaris.</em>',
+    step5_placeholder: '— select a time from the map or the cards —',
+    step6_zone:  'The time zone',
+    step6_taken: 'is taken into account in the calculation.',
+    step6_eqtime:"The <strong>equation of time</strong> (up to ±16 minutes, due to Earth's elliptical orbit) <em>is not corrected</em> — this may explain a small deviation.",
+    step6_error: 'Errors in <strong>angle measurement</strong> (e.g. ±5°) translate to ±20 minutes of deviation.',
+    saving_text:   'Saving...',
+    saved_text:    '✓ Saved!',
+    journal_signin:'Sign in to see your observations.',
+    loading_text:  'Loading...',
+    journal_empty: 'You haven\'t saved any observations yet.',
+    btn_delete_short: '✕ Delete',
+    journal_angle:     'Angle',
+    journal_calculated:'Calculated',
+
+
     step6_title: '<strong>Sources of deviation from the clock:</strong>',
     corr_ref:     'Nearest reference',
     corr_dist:    'Distance',
@@ -1466,11 +1530,27 @@ const LANG_DATA = {
     clock_title:  '<strong>Why subtract from 360°?</strong>',
     clock_green:  'Counter-clockwise:',
     clock_orange: 'Clockwise:',
-    clock_pointer:'Dubhe–Merak pointer',
+
+    zenith_label:  'zenith (0°)',
+    ccw_label:     'counter-clockwise',
+    cw_label:      'clockwise',
+    corr_ref_lbl:  'Nearest reference',
+    corr_dist_lbl: 'Distance',
+    corr_fix_lbl:  'Correction',
+    corr_zone_lbl: 'Time zone',
+    corr_pos_lbl:  'position',
+    lbl_lat_full:     'Latitude (e.g. 36.89)',
+    lbl_lon_full:     'Longitude (e.g. 27.28)',
+    lbl_locname_full: 'Location name (optional)',
+    gps_note_label: '📋 Note about GPS:',
+    gps_https_text: 'Location detection only works when the app runs via <strong>https://</strong> (e.g. GitHub Pages) or <strong>localhost</strong>.',
+    gps_file_text:  'If you open the file directly (file://), the browser automatically denies permission.',
+    gps_alt_text:   '<strong>Alternatively:</strong> use the List tab or find your coordinates on Google Maps and enter them manually.',
+  clock_pointer:'Dubhe–Merak pointer',
   }
 };
 
-let currentLang = localStorage.getItem('astrolab_lang') || 'el';
+let currentLang = localStorage.getItem('astrolab_lang') || 'en';
 
 function t(key){ return (LANG_DATA[currentLang] && LANG_DATA[currentLang][key]) || LANG_DATA['el'][key] || key; }
 
@@ -1484,9 +1564,9 @@ function applyLang(){
   document.querySelectorAll('[data-i18n-ph]').forEach(el => {
     el.placeholder = t(el.dataset.i18nPh);
   });
-  // Ενημέρωση κουμπιού γλώσσας
-  const btn = document.getElementById('langToggle');
-  if(btn) btn.textContent = currentLang === 'el' ? 'EN' : 'ΕΛ';
+  // Ενημέρωση κουμπιού γλώσσας — δείχνει τη γλώσσα στην οποία θα αλλάξει
+  const btnText = document.getElementById('langToggleText');
+  if(btnText) btnText.textContent = currentLang === 'el' ? 'English' : 'Ελληνικά';
   // HTML lang attribute
   document.documentElement.lang = currentLang;
   const pt = document.getElementById('pageTitle');
@@ -1524,6 +1604,10 @@ let hourData = [];
 let globalCDate = 0;
 
 // ── Init ──
+const MONTH_NAMES_EL = ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
+const MONTH_NAMES_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+function getMonthNames(){ return currentLang==='en' ? MONTH_NAMES_EN : MONTH_NAMES_EL; }
+
 function runInit(){
   applyLang();
   startQuoteRotation();
@@ -1577,16 +1661,28 @@ function switchTab(name){
 }
 
 // ── Populate countries ──
+function getCountryName(code){
+  const tr = CITY_TRANSLATIONS[code];
+  return (currentLang==='en' && tr) ? tr.name : CITIES_DB[code].name;
+}
+function getCityName(code, greekName){
+  const tr = CITY_TRANSLATIONS[code];
+  if(currentLang==='en' && tr && tr.cities[greekName]) return tr.cities[greekName];
+  return greekName;
+}
+
 function populateCountries(){
   const sel = document.getElementById('countrySelect');
+  const prevValue = sel.value;
   sel.innerHTML='';
   for(const code in CITIES_DB){
     const opt = document.createElement('option');
     opt.value = code;
-    opt.textContent = CITIES_DB[code].name;
-    if(code==='GR') opt.selected=true;
+    opt.textContent = getCountryName(code);
     sel.appendChild(opt);
   }
+  sel.value = prevValue || 'GR';
+  if(!sel.value) sel.value = 'GR';
   onCountryChange();
 }
 
@@ -1595,11 +1691,11 @@ function onCountryChange(){
   const citysel = document.getElementById('citySelect');
   citysel.innerHTML='<option value="" disabled selected>'+ t('ph_city_select') +'</option>';
   const sortedCities = [...CITIES_DB[code].cities].sort((a,b)=>
-    a.name.localeCompare(b.name, 'el'));
+    getCityName(code,a.name).localeCompare(getCityName(code,b.name), currentLang==='en'?'en':'el'));
   sortedCities.forEach(c=>{
     const opt = document.createElement('option');
     opt.value = JSON.stringify({lat:c.lat,lon:c.lon,name:c.name});
-    opt.textContent = c.name;
+    opt.textContent = getCityName(code, c.name);
     citysel.appendChild(opt);
   });
 }
@@ -1690,9 +1786,6 @@ function updateLocationBadge(){
 // ═══════════════════════════════════════════════
 // DATE & DST
 // ═══════════════════════════════════════════════
-const MONTH_NAMES_EL = ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
-const MONTH_NAMES_EN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-function getMonthNames(){ return currentLang==='en' ? MONTH_NAMES_EN : MONTH_NAMES_EL; }
 
 function daysInMonth(month, year){ return new Date(year, month, 0).getDate(); }
 
@@ -1872,10 +1965,10 @@ function computeCorrection(dateStr){
   const target = toD360(m,day);
 
   const refs=[
-    {label:'21 Μαρτίου',   m:3, d:21, pos:'δεξιά'},
-    {label:'21 Ιουνίου',   m:6, d:21, pos:'πάνω'},
-    {label:'21 Σεπτεμβρίου',m:9,d:21,pos:'αριστερά'},
-    {label:'21 Δεκεμβρίου',m:12,d:21,pos:'κάτω'},
+    {label_el:'21 Μαρτίου',    label_en:'March 21',    m:3, d:21, pos_el:'δεξιά',    pos_en:'right'},
+    {label_el:'21 Ιουνίου',    label_en:'June 21',     m:6, d:21, pos_el:'πάνω',     pos_en:'top'},
+    {label_el:'21 Σεπτεμβρίου',label_en:'September 21',m:9, d:21, pos_el:'αριστερά', pos_en:'left'},
+    {label_el:'21 Δεκεμβρίου', label_en:'December 21', m:12,d:21, pos_el:'κάτω',     pos_en:'bottom'},
   ];
 
   let best=refs[0], minD=Infinity;
@@ -1890,7 +1983,8 @@ function computeCorrection(dateStr){
     corrDeg:minD, corrH,
     corrHInt:Math.floor(corrH),
     corrMin:Math.round((corrH%1)*60),
-    refLabel:best.label, refPos:best.pos,
+    refLabel: currentLang==='en'?best.label_en:best.label_el,
+    refPos: currentLang==='en'?best.pos_en:best.pos_el,
     dayOffset:minD
   };
 }
@@ -1981,25 +2075,25 @@ function renderResults(corr, utcOff, C_date){
 
   // Steps
   document.getElementById('stepsContent').innerHTML=`
-    <div class="step"><div class="step-n">1</div><div class="step-t">Βρίσκω την <strong>πλησιέστερη βασική ημερομηνία</strong> (ισημερία / ηλιοστάσιο): <strong>${corr.refLabel}</strong></div></div>
+    <div class="step"><div class="step-n">1</div><div class="step-t">${t('step1_text')} <strong>${corr.refLabel}</strong></div></div>
     <div class="step"><div class="step-n">2</div><div class="step-t">${t('step2_text')} <span class="eq">${corr.dayOffset} ${t('days_label')} = ${corr.corrDeg}°</span></div></div>
     <div class="step"><div class="step-n">3</div><div class="step-t">${t('step3_text')} <span class="eq">${corr.corrDeg}° ÷ 15 = ${corr.corrH.toFixed(3)} ${t('hours_unit')}</span> = <strong>${corr.corrHInt}${t('hours_unit')} ${corr.corrMin}${t('min_unit')}</strong></div></div>
     <div class="step"><div class="step-n">4</div><div class="step-t">${t('step4_text')}</div></div>
     <div class="step">
       <div class="step-n">5</div>
       <div class="step-t">
-        Τύπος: &nbsp;<span class="eq">γωνία<sub>αντιωρ.</sub> ÷ 15 + σταθερά = τοπική ώρα</span><br>
+        ${t('step5_formula')} &nbsp;<span class="eq">${t('step5_formula_text')}</span><br>
         <div id="clockExplain" style="margin-top:14px;"></div>
         <div id="step5live" data-cdate="${C_date}" style="margin-top:12px;padding:14px 16px;background:#071625;border-radius:9px;border:1px solid var(--border);font-size:1rem;line-height:2.2;">
-          <em style="color:var(--text2);">— επίλεξε ώρα από τον χάρτη ή τα cards —</em>
+          <em style="color:var(--text2);">${t('step5_placeholder')}</em>
         </div>
       </div>
     </div>
     <div class="step"><div class="step-n">6</div><div class="step-t">
-      <strong>Πηγές απόκλισης από το ρολόι:</strong><br>
-      • Η ζώνη ώρας <strong>UTC+${utcOff}</strong> ${utcOff===3?'(θερινή)':'(χειμερινή)'} λαμβάνεται υπόψη στον υπολογισμό.<br>
-      • Η <strong>εξίσωση χρόνου</strong> (έως ±16 λεπτά, λόγω της ελλειπτικής τροχιάς της Γης) <em>δεν διορθώνεται</em> — μπορεί να εξηγεί μικρή απόκλιση.<br>
-      • Σφάλματα στην <strong>παρατήρηση της γωνίας</strong> (π.χ. ±5°) μεταφράζονται σε ±20 λεπτά απόκλιση.
+      ${t('step6_title')}<br>
+      • ${t('step6_zone')} <strong>UTC+${utcOff}</strong> ${utcOff===3?'('+t('dst_summer_label')+')':'('+t('dst_winter_label')+')'} ${t('step6_taken')}<br>
+      • ${t('step6_eqtime')}<br>
+      • ${t('step6_error')}
     </div></div>
   `;
 
@@ -2159,16 +2253,16 @@ function drawSky(hour){
     return { ...s, pos, xy: starToXY(pos.alt, pos.az) };
   });
 
-  // Σχεδιασμός αστέρων UMi — ομοιόμορφο μέγεθος, χωρίς ονόματα
+  // Σχεδιασμός αστέρων UMi — μικρότερο μέγεθος από τη Μεγάλη Άρκτο
   umiPositions.forEach(s => {
     if(!s.xy.visible) return;
     const {x, y} = s.xy;
-    const r = 3.5;  // ίδιο μέγεθος για όλα
-    const glow = ctx.createRadialGradient(x,y,0,x,y,r*3);
-    glow.addColorStop(0,'rgba(150,200,255,0.85)');
+    const r = 2.2;  // μικρότερο από UMa (που έχει r~3-4)
+    const glow = ctx.createRadialGradient(x,y,0,x,y,r*2.5);
+    glow.addColorStop(0,'rgba(150,200,255,0.75)');
     glow.addColorStop(1,'transparent');
     ctx.fillStyle=glow;
-    ctx.beginPath(); ctx.arc(x,y,r*3,0,2*Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.arc(x,y,r*2.5,0,2*Math.PI); ctx.fill();
     ctx.beginPath(); ctx.arc(x,y,r,0,2*Math.PI);
     ctx.fillStyle='rgba(210,235,255,1)'; ctx.fill();
   });
@@ -2181,7 +2275,7 @@ function drawSky(hour){
     if(!a || !b || !a.visible || !b.visible) return;
     ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y);
     ctx.strokeStyle='rgba(150,200,255,0.85)';
-    ctx.lineWidth=2.2; ctx.stroke();
+    ctx.lineWidth=1.5; ctx.stroke();
   }
 
   // Παραλληλόγραμμο: β→γ→η→ζ→β (περιμετρικά)
@@ -2655,7 +2749,7 @@ function saveObservation(){
   if(!window.lastCalcResult){ alert('Κάνε πρώτα έναν υπολογισμό.'); return; }
   const btn = document.getElementById('saveObsBtn');
   const original = btn.textContent;
-  btn.textContent = 'Αποθήκευση...'; btn.disabled = true;
+  btn.textContent = t('saving_text'); btn.disabled = true;
   db.collection('observations').add({
     uid: currentUser.uid,
     userEmail: currentUser.email || '',
@@ -2668,7 +2762,7 @@ function saveObservation(){
     calculatedTime: window.lastCalcResult.calcTimeStr,
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   }).then(() => {
-    btn.textContent = '✓ Αποθηκεύτηκε!';
+    btn.textContent = t('saved_text');
     console.log('saveObservation: success, calling addMapPin');
     addMapPin();
     setTimeout(() => { btn.textContent = original; btn.disabled = false; }, 2000);
@@ -2681,30 +2775,30 @@ function saveObservation(){
 function loadObservations(){
   const listEl = document.getElementById('journalList');
   if(!currentUser){
-    listEl.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px;">Συνδέσου για να δεις τις παρατηρήσεις σου.</p>';
+    listEl.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px;">' + t('journal_signin') + '</p>';
     return;
   }
-  listEl.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px;">Φόρτωση...</p>';
+  listEl.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px;">' + t('loading_text') + '</p>';
   db.collection('observations')
     .where('uid','==',currentUser.uid)
     .orderBy('createdAt','desc')
     .get()
     .then(snap => {
       if(snap.empty){
-        listEl.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px;">Δεν έχεις αποθηκεύσει ακόμα παρατηρήσεις.</p>';
+        listEl.innerHTML = '<p style="color:var(--text2);text-align:center;padding:20px;">' + t('journal_empty') + '</p>';
         return;
       }
       let html = '';
       snap.forEach(d => {
         const o = d.data();
-        const dateFmt = new Date(o.dateStr+'T12:00:00').toLocaleDateString('el-GR',{day:'numeric',month:'long',year:'numeric'});
+        const dateFmt = new Date(o.dateStr+'T12:00:00').toLocaleDateString(currentLang==='en'?'en-US':'el-GR',{day:'numeric',month:'long',year:'numeric'});
         html += `<div class="journal-entry">
           <div class="je-main">
             <div class="je-date">${dateFmt}</div>
-            <div class="je-loc">${o.locationName} — ώρα παρατήρησης ${String(o.observedHour).padStart(2,'0')}:00</div>
-            <div class="je-calc">Γωνία: ${o.angleCCW}° &nbsp;|&nbsp; Υπολογίστηκε: <strong>${o.calculatedTime}</strong></div>
+            <div class="je-loc">${o.locationName} — ${t('s5_obstime')} ${String(o.observedHour).padStart(2,'0')}:00</div>
+            <div class="je-calc">${t('journal_angle')}: ${o.angleCCW}° &nbsp;|&nbsp; ${t('journal_calculated')}: <strong>${o.calculatedTime}</strong></div>
           </div>
-          <button class="je-del" onclick="deleteObservation('${d.id}')">✕ Διαγραφή</button>
+          <button class="je-del" onclick="deleteObservation('${d.id}')">${t('btn_delete_short')}</button>
         </div>`;
       });
       listEl.innerHTML = html;

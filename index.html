@@ -1604,6 +1604,8 @@ function applyLang(){
   if(csel && csel.options[0] && csel.options[0].value===''){
     csel.options[0].text = t('ph_city_select');
   }
+  // Ανανέωση εμφανιζόμενου ονόματος τοποθεσίας (αν έχει ήδη οριστεί)
+  if(locState.lat!=null) updateLocationBadge();
 }
 
 function toggleLang(){
@@ -1721,11 +1723,12 @@ function onCountryChange(){
 function saveFromList(){
   const raw = document.getElementById('citySelect').value;
   if(!raw){
-    alert('Παρακαλώ επέλεξε πρώτα μια πόλη.');
+    alert(t('alert_select_city'));
     return;
   }
   const c = JSON.parse(raw);
-  saveLocation(c.lat, c.lon, c.name);
+  const countryCode = document.getElementById('countrySelect').value;
+  saveLocation(c.lat, c.lon, c.name, countryCode);
 }
 
 function saveManual(){
@@ -1774,7 +1777,7 @@ function saveGPS(){
   saveLocation(gpsResult.lat, gpsResult.lon, `GPS (${gpsResult.lat.toFixed(3)}°, ${gpsResult.lon.toFixed(3)}°)`);
 }
 
-function saveLocation(lat,lon,name){
+function saveLocation(lat,lon,name,countryCode){
   const userName = document.getElementById('setupUserName').value.trim();
   const school    = document.getElementById('setupSchool').value.trim();
   if(!userName){
@@ -1782,7 +1785,7 @@ function saveLocation(lat,lon,name){
     document.getElementById('setupUserName').focus();
     return;
   }
-  locState = {lat,lon,name,userName,school};
+  locState = {lat,lon,name,userName,school,countryCode:countryCode||null};
   localStorage.setItem('astrolab_location', JSON.stringify(locState));
   document.getElementById('locationSetup').style.display='none';
   updateLocationBadge();
@@ -1795,8 +1798,14 @@ function saveLocation(lat,lon,name){
   }
 }
 
+function getDisplayLocationName(){
+  if(!locState.name) return '—';
+  if(locState.countryCode) return getCityName(locState.countryCode, locState.name);
+  return locState.name;
+}
+
 function updateLocationBadge(){
-  document.getElementById('locName').textContent = locState.name || '—';
+  document.getElementById('locName').textContent = getDisplayLocationName();
   document.getElementById('locCoords').textContent =
     locState.lat!=null ? `${locState.lat.toFixed(4)}° ${currentLang==='en'?'N':'Β'},  ${locState.lon.toFixed(4)}° ${currentLang==='en'?'E':'Α'}` : '—';
 }
@@ -2910,12 +2919,4 @@ function showWorldMap(){
       className:'',
       html:'<div style="width:14px;height:14px;background:#f0c060;border:2px solid #fff;border-radius:50%;box-shadow:0 0 8px rgba(240,192,96,.8);"></div>',
       iconSize:[14,14], iconAnchor:[7,7]
-    });
-    snap.forEach(d => {
-      const p = d.data();
-      if(typeof p.lat!=='number'||typeof p.lon!=='number') return;
-      const popup = `<strong>${escapeHtml(p.userName||'Ανώνυμος')}</strong><br>
-        ${p.school?'<small>'+escapeHtml(p.school)+'</small><br>':''}
-        <small>${escapeHtml(p.locationName||'')}</small>`;
-      L.marker([p.lat,p.lon],{icon}).addTo(worldMapInstance).bindPopup(popup);
-    })
+    

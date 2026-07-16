@@ -1352,10 +1352,13 @@ const LANG_DATA = {
     step5_formula_text: 'γωνία<sub>αντιωρ.</sub> ÷ 15 + σταθερά = τοπική ώρα',
     step1_text: 'Βρίσκω την <strong>πλησιέστερη βασική ημερομηνία</strong> (ισημερία / ηλιοστάσιο):',
     step2_text: 'Μετράω ημέρες απόστασης (1 ημέρα = 1°):',
+    days_label: 'ημέρες',
+    step2_explain: 'Κάθε ημέρα απόστασης από την πλησιέστερη αναφορά ισοδυναμεί με 1° γωνίας, αφού η Γη διανύει περίπου 360° σε 365 ημέρες γύρω από τον Ήλιο.',
+
     step3_text: 'Μετατρέπω σε ώρες:',
     hours_unit: 'ω',
     min_unit:   'λ',
-    step3_explain: 'Το δεκαδικό μέρος μετατρέπεται σε λεπτά: πολλαπλασιάζουμε επί 60.',
+    step3_explain: 'Για να μετατρέψουμε το δεκαδικό μέρος σε λεπτά πολλαπλασιάζουμε επί 60.',
 
     step4_text: 'Παρατηρώ τον ουρανό και μετράω τη γωνία <strong>αντιωρολογιακά</strong> από την κατακόρυφο (ζενίθ) που διέρχεται από τον Πολικό, μέχρι τη γραμμή των δύο αστέρων Dubhe–Merak. <em>Κορυφή γωνίας: Πολικός αστέρας.</em>',
     step5_placeholder: '— επίλεξε ώρα από τον χάρτη ή τα cards —',
@@ -1502,10 +1505,13 @@ const LANG_DATA = {
     step5_formula_text: 'angle<sub>CCW</sub> ÷ 15 + constant = local time',
     step1_text: 'Find the <strong>nearest reference date</strong> (equinox / solstice):',
     step2_text: 'Count days of difference (1 day = 1°):',
+    days_label: 'days',
+    step2_explain: 'Each day of distance from the nearest reference date equals 1° of angle, since Earth travels approximately 360° in 365 days around the Sun.',
+
     step3_text: 'Convert to hours:',
     hours_unit: 'h',
     min_unit:   'min',
-    step3_explain: 'The decimal part converts to minutes: multiply by 60.',
+    step3_explain: 'To convert the decimal part to minutes, we multiply by 60.',
 
     step4_text: 'Observe the sky and measure the angle <strong>counter-clockwise</strong> from the vertical (zenith) through Polaris, to the Dubhe–Merak line. <em>Angle vertex: Polaris.</em>',
     step5_placeholder: '— select a time from the map or the cards —',
@@ -2126,7 +2132,8 @@ function renderResults(corr, utcOff, C_date){
   // Steps
   document.getElementById('stepsContent').innerHTML=`
     <div class="step"><div class="step-n">1</div><div class="step-t">${t('step1_text')} <strong>${corr.refLabel}</strong></div></div>
-    <div class="step"><div class="step-n">2</div><div class="step-t">${t('step2_text')} <span class="eq">${corr.dayOffset} ${t('days_label')} = ${corr.corrDeg}°</span></div></div>
+    <div class="step"><div class="step-n">2</div><div class="step-t">${t('step2_text')} <span class="eq">${corr.dayOffset} ${t('days_label')} = ${corr.corrDeg}°</span><br>
+      <small style="color:var(--text2);">${t('step2_explain')}</small></div></div>
     <div class="step"><div class="step-n">3</div><div class="step-t">${t('step3_text')} <span class="eq">${corr.corrDeg}° ÷ 15 = ${corr.corrH.toFixed(3)} ${t('hours_unit')}</span><br>
       <small style="color:var(--text2);">${t('step3_explain')} <span class="eq" style="font-size:.9em;">0.${corr.corrH.toFixed(3).split('.')[1]} × 60 ≈ ${corr.corrMin} ${t('min_unit')}</span></small><br>
       = <strong>${corr.corrHInt}${t('hours_unit')} ${corr.corrMin}${t('min_unit')}</strong></div></div>
@@ -2940,27 +2947,4 @@ function deleteMyPin(){
     .then(snap => {
       if(snap.empty){ alert('Δεν βρέθηκε πινέζα.'); return; }
       const batch = db.batch();
-      snap.forEach(d => batch.delete(d.ref));
-      return batch.commit();
-    })
-    .then(() => {
-      alert('✓ Η πινέζα σου διαγράφηκε.');
-      // Σωστή καταστροφή χάρτη
-      if (worldMapInstance) {
-        worldMapInstance.remove();
-        worldMapInstance = null;
-      }
-      showWorldMap();
-    })
-    .catch(e => alert('Σφάλμα: ' + e.message));
-}
-
-function escapeHtml(str){
-  const d = document.createElement('div');
-  d.textContent = str;
-  return d.innerHTML;
-}
-</script>
-
-</body>
-</html>
+      snap.forEach(d => batch.delete(d.ref)

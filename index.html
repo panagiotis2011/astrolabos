@@ -1365,6 +1365,10 @@ const LANG_DATA = {
 
     step4_text: 'Παρατηρώ τον ουρανό και μετράω τη γωνία <strong>αντιωρολογιακά</strong> από την κατακόρυφο (ζενίθ) που διέρχεται από τον Πολικό, μέχρι τη γραμμή των δύο αστέρων Dubhe–Merak. <em>Κορυφή γωνίας: Πολικός αστέρας.</em>',
     step4_measured: 'Μετρημένη γωνία στις',
+    step4_convert: 'Μετατρέπω τη γωνία σε ώρες (÷15):',
+    step5_addition_text: 'Προσθέτω το αποτέλεσμα του Βήματος 4 στη σταθερά ημερομηνίας/τοποθεσίας:',
+    step5_from_step4: 'Από το Βήμα 4:',
+
 
     step5_placeholder: '— επίλεξε ώρα από τον χάρτη ή τα cards —',
     step6_zone:  'Η ζώνη ώρας',
@@ -1525,6 +1529,10 @@ const LANG_DATA = {
 
     step4_text: 'Observe the sky and measure the angle <strong>counter-clockwise</strong> from the vertical (zenith) through Polaris, to the Dubhe–Merak line. <em>Angle vertex: Polaris.</em>',
     step4_measured: 'Measured angle at',
+    step4_convert: 'Convert the angle to hours (÷15):',
+    step5_addition_text: 'I add the result from Step 4 to the date/location constant:',
+    step5_from_step4: 'From Step 4:',
+
 
     step5_placeholder: '— select a time from the map or the cards —',
     step6_zone:  'The time zone',
@@ -2167,12 +2175,12 @@ function renderResults(corr, utcOff, C_date){
       <div id="step4live" style="margin-top:10px;padding:10px 14px;background:#071625;border-radius:8px;border:1px solid var(--border);font-size:.95rem;">
         <em style="color:var(--text2);">${t('step5_placeholder')}</em>
       </div>
+      <div id="clockExplain" style="margin-top:14px;"></div>
     </div></div>
     <div class="step">
       <div class="step-n">5</div>
       <div class="step-t">
-        ${t('step5_formula')} &nbsp;<span class="eq">${t('step5_formula_text')}</span><br>
-        <div id="clockExplain" style="margin-top:14px;"></div>
+        ${t('step5_addition_text')}<br>
         <div id="step5live" data-cdate="${C_date}" style="margin-top:12px;padding:14px 16px;background:#071625;border-radius:9px;border:1px solid var(--border);font-size:1rem;line-height:2.2;">
           <em style="color:var(--text2);">${t('step5_placeholder')}</em>
         </div>
@@ -2602,47 +2610,43 @@ function drawClockExplain(ccwDeg, C_date){
 function updateStep5(d){
   drawClockExplain(d.ccwDeg, globalCDate);
 
-  // Ενημέρωση Βήματος 4 — μετρημένη γωνία για την επιλεγμένη ώρα
-  const step4El = document.getElementById('step4live');
-  if(step4El){
-    const hourLabel4 = d.hour.toString().padStart(2,'0') + ':00';
-    step4El.innerHTML = `${t('step4_measured')} <strong>${hourLabel4}</strong>: <span class="eq">${d.ccwDeg}°</span>`;
-  }
-
-  const el = document.getElementById('step5live');
-  if(!el) return;
-  const C_date = globalCDate;
-
-  // Σωστός υπολογισμός: τοπική ώρα = ccwDeg/15 + C_date
   const ccw    = d.ccwDeg;
   const rawH   = ccw / 15;
-  const totalH = ((rawH + C_date) % 24 + 24) % 24;
-  const cH = Math.floor(totalH), cM = Math.round((totalH%1)*60);
-  if(cM === 60){ cH++; cM = 0; }
-  const timeStr   = cH.toString().padStart(2,'0') + ':' + cM.toString().padStart(2,'0');
+  const C_date = globalCDate;
   const hourLabel = d.hour.toString().padStart(2,'0') + ':00';
 
-  // C_date σε ώρες και λεπτά για εμφάνιση
+  // ── Βήμα 4: μετρημένη γωνία + μετατροπή σε ώρες ──
+  const step4El = document.getElementById('step4live');
+  if(step4El){
+    step4El.innerHTML = `
+      ${t('step4_measured')} <strong>${hourLabel}</strong>: <span class="eq">${ccw}°</span><br>
+      <small style="color:var(--text2);margin-top:4px;display:inline-block;">${t('step4_convert')}</small><br>
+      <span class="eq">${ccw}° ÷ 15 = ${rawH.toFixed(2)} ${t('hours_unit')}</span>`;
+  }
+
+  // ── Βήμα 5: απλή πρόσθεση Βήμα4 + σταθερά ──
+  const el = document.getElementById('step5live');
+  if(!el) return;
+
+  const totalH = ((rawH + C_date) % 24 + 24) % 24;
+  const cH = Math.floor(totalH), cM = Math.round((totalH%1)*60);
+  const timeStr = cH.toString().padStart(2,'0') + ':' + cM.toString().padStart(2,'0');
   const CInt = Math.floor(C_date), CMin = Math.round((C_date%1)*60);
 
   el.innerHTML = `
-    <table style="width:100%;border-collapse:collapse;font-size:.97rem;">
+    <table style="width:100%;border-collapse:collapse;font-size:1rem;">
       <tr>
-        <td style="color:var(--text2);padding:3px 8px 3px 0;white-space:nowrap;">${t('s5_angle')}</td>
-        <td><span class="eq">${ccw}°</span></td>
+        <td style="color:var(--text2);padding:4px 10px 4px 0;white-space:nowrap;">${t('step5_from_step4')}</td>
+        <td><span class="eq">${rawH.toFixed(2)} ${t('hours_unit')}</span></td>
       </tr>
       <tr>
-        <td style="color:var(--text2);padding:3px 8px 3px 0;white-space:nowrap;">${t('s5_hours')}</td>
-        <td><span class="eq">${ccw}° ÷ 15 = ${rawH.toFixed(2)} ${currentLang==='en'?'h':'ω'}</span></td>
+        <td style="color:var(--text2);padding:4px 10px 4px 0;white-space:nowrap;">${t('s5_const')}</td>
+        <td><span class="eq">+ ${CInt}${t('hours_unit')} ${CMin}${t('min_unit')}</span> <small style="color:var(--text2)">(${C_date.toFixed(3)} ${t('hours_unit')})</small></td>
       </tr>
-      <tr>
-        <td style="color:var(--text2);padding:3px 8px 3px 0;white-space:nowrap;">${t('s5_const')}</td>
-        <td><span class="eq">+ ${CInt}ω ${CMin}λ</span> <small style="color:var(--text2)">(${C_date.toFixed(3)} ω)</small></td>
-      </tr>
-      <tr style="border-top:1px solid var(--border);">
-        <td style="color:var(--text2);padding:6px 8px 2px 0;white-space:nowrap;">${t('s5_result')}</td>
-        <td style="padding-top:6px;">
-          <strong style="color:var(--gold);font-size:1.2em;">≈ ${timeStr}</strong>
+      <tr style="border-top:2px solid var(--border);">
+        <td style="color:var(--text2);padding:8px 10px 2px 0;white-space:nowrap;">${t('s5_result')}</td>
+        <td style="padding-top:8px;">
+          <strong style="color:var(--gold);font-size:1.3em;">≈ ${timeStr}</strong>
           <small style="color:var(--text2);margin-left:8px;">(${t('s5_obstime')}: ${hourLabel})</small>
         </td>
       </tr>
@@ -2934,14 +2938,4 @@ function addMapPin(){
       };
       console.log('addMapPin: writing pin', pinData);
       return db.collection('mapPins').add(pinData);
-    })
-    .then(ref => {
-      console.log('addMapPin: success, id=', ref.id);
-    })
-    .catch(e => {
-      console.error('addMapPin failed:', e.code, e.message);
-    });
-}
-
-function showWorldMap(){
-  document.getElementBy
+    

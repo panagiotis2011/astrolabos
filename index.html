@@ -1414,9 +1414,6 @@ const LANG_DATA = {
     clock_explain_3: '(πράσινο τόξο).',
     clock_const: 'σταθ.',
     clock_const_explain: 'Η σταθερά αντιστοιχεί στη γωνία που θα είχε ο δείκτης στα μεσάνυχτα, για τη συγκεκριμένη ημερομηνία και τοποθεσία — περιλαμβάνει τη ζώνη ώρας και τη γεωγραφική θέση.',
-    method_note_title: 'Σημείωση μεθόδου',
-    method_note_text: 'Αυτή είναι η κλασική μέθοδος «με το χέρι», χρήσιμη όταν βρίσκεσαι στο πεδίο χωρίς υπολογιστή — δίνει μια χονδρική διόρθωση βασισμένη μόνο στην ημερομηνία. Η εφαρμογή όμως υπολογίζει στο Βήμα 5 μια πολύ ακριβέστερη σταθερά με πραγματική αστρονομία (θέσεις άστρων), η οποία περιλαμβάνει επιπλέον τη ζώνη ώρας και το γεωγραφικό σου μήκος — γι\' αυτό τα δύο νούμερα διαφέρουν σημαντικά.',
-
 
     clock_polaris_label: 'Πολικός',
 
@@ -1577,9 +1574,6 @@ const LANG_DATA = {
     clock_explain_3: '(green arc).',
     clock_const: 'const.',
     clock_const_explain: 'The constant corresponds to the angle the pointer would have at midnight, for this specific date and location — it includes the time zone and geographic position.',
-    method_note_title: 'Method note',
-    method_note_text: 'This is the classical "by hand" method, useful when you\'re out in the field without a computer — it gives a rough correction based only on the date. However, the app calculates in Step 5 a much more precise constant using real astronomy (actual star positions), which also includes your time zone and longitude — that is why the two numbers differ significantly.',
-
 
     clock_polaris_label: 'Polaris',
 
@@ -2176,12 +2170,7 @@ function renderResults(corr, utcOff, C_date){
       <small style="color:var(--text2);">${t('step2_how')}: <span class="eq" style="font-size:.9em;">${corr.obsDateLabel} (${t('day_number')} ${corr.targetDay360}) − ${corr.refLabel} (${t('day_number')} ${corr.refDay360}) = ${corr.dayOffset} ${t('days_label')}</span></small></div></div>
     <div class="step"><div class="step-n">3</div><div class="step-t">${t('step3_text')} <span class="eq">${corr.corrDeg}° ÷ 15 = ${corr.corrH.toFixed(3)} ${t('hours_unit')}</span><br>
       <small style="color:var(--text2);">${t('step3_explain')} <span class="eq" style="font-size:.9em;">0.${corr.corrH.toFixed(3).split('.')[1]} × 60 ≈ ${corr.corrMin} ${t('min_unit')}</span></small><br>
-      = <strong>${corr.corrHInt}${t('hours_unit')} ${corr.corrMin}${t('min_unit')}</strong>
-      <div style="margin-top:10px;padding:10px 14px;background:#1a1000;border:1px solid #6a4400;border-radius:8px;font-size:.88rem;line-height:1.6;">
-        <strong style="color:#f0a040;">⚠ ${t('method_note_title')}</strong><br>
-        <span style="color:var(--text2);">${t('method_note_text')}</span>
-      </div>
-    </div></div>
+      = <strong>${corr.corrHInt}${t('hours_unit')} ${corr.corrMin}${t('min_unit')}</strong></div></div>
     <div class="step"><div class="step-n">4</div><div class="step-t">${t('step4_text')}<br>
       <div id="step4live" style="margin-top:10px;padding:10px 14px;background:#071625;border-radius:8px;border:1px solid var(--border);font-size:.95rem;">
         <em style="color:var(--text2);">${t('step5_placeholder')}</em>
@@ -2949,5 +2938,4 @@ function addMapPin(){
       };
       console.log('addMapPin: writing pin', pinData);
       return db.collection('mapPins').add(pinData);
-    })
-    .then(ref 
+    

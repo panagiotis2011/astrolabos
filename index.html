@@ -1367,6 +1367,8 @@ const LANG_DATA = {
     step4_measured: 'Μετρημένη γωνία στις',
     step_tz_text: 'Καθορίζω τη ζώνη ώρας της τοποθεσίας μου:',
     step_tz_explain: 'Η Ελλάδα βρίσκεται σε ζώνη ώρας UTC+2 (χειμώνα) ή UTC+3 (καλοκαίρι, θερινή ώρα). Αυτή η διαφορά από τη διεθνή ώρα (UTC) πρέπει να ληφθεί υπόψη.',
+    step_tz_note: 'Δεν είναι ακριβώς 3 ώρες: η αστρική ημέρα είναι λίγο μικρότερη από την ηλιακή, και ο Πολικός δεν είναι ακριβώς στον ουράνιο πόλο — αυτά προσθέτουν μια μικρή διαφορά.',
+
     step_tz_result: 'Συνεισφορά ζώνης ώρας',
     step_tz_short: 'Ζώνη ώρας:',
     step_lon_text: 'Καθορίζω το γεωγραφικό μήκος της τοποθεσίας μου:',
@@ -1375,9 +1377,11 @@ const LANG_DATA = {
     step_lon_short: 'Γεωγρ. μήκος:',
     step_date_short: 'Ημερολογιακή θέση:',
     step_date_precise: 'Ακριβής αστρονομική τιμή',
+    step_date_precise_note: 'Η γωνία CCW που θα είχε ο δείκτης στα μεσάνυχτα στο Γκρίνουιτς (γεωγρ. μήκος 0°, UTC+0) για αυτή την ημερομηνία, υπολογισμένη με πραγματικές θέσεις άστρων.',
+
 
     step4_convert: 'Μετατρέπω τη γωνία σε ώρες (÷15):',
-    step5_addition_text: 'Προσθέτω το αποτέλεσμα του Βήματος 4 στη σταθερά ημερομηνίας/τοποθεσίας:',
+    step5_addition_text: 'Προσθέτω και τους 4 όρους που υπολόγισα (Βήματα 1, 2, 3 και 4):',
     step5_from_step4: 'Από το Βήμα 4:',
 
 
@@ -1545,6 +1549,8 @@ const LANG_DATA = {
     step4_measured: 'Measured angle at',
     step_tz_text: 'I determine the time zone of my location:',
     step_tz_explain: 'Greece is in time zone UTC+2 (winter) or UTC+3 (summer, daylight saving). This difference from international time (UTC) must be taken into account.',
+    step_tz_note: 'Not exactly 3 hours: the sidereal day is slightly shorter than the solar day, and Polaris isn\'t exactly at the celestial pole — these add a small difference.',
+
     step_tz_result: 'Time zone contribution',
     step_tz_short: 'Time zone:',
     step_lon_text: 'I determine the longitude of my location:',
@@ -1553,9 +1559,11 @@ const LANG_DATA = {
     step_lon_short: 'Longitude:',
     step_date_short: 'Calendar position:',
     step_date_precise: 'Precise astronomical value',
+    step_date_precise_note: 'The CCW angle the pointer would have at midnight in Greenwich (0° longitude, UTC+0) for this date, computed from real star positions.',
+
 
     step4_convert: 'Convert the angle to hours (÷15):',
-    step5_addition_text: 'I add the result from Step 4 to the date/location constant:',
+    step5_addition_text: 'I add all 4 terms I calculated (Steps 1, 2, 3 and 4):',
     step5_from_step4: 'From Step 4:',
 
 
@@ -2216,7 +2224,8 @@ function renderResults(corr, utcOff, C_date){
     <div class="step"><div class="step-n">1</div><div class="step-t">
       ${t('step_tz_text')} <strong>UTC+${utcOff}</strong> (${utcOff===3?t('dst_summer_label'):t('dst_winter_label')})<br>
       <small style="color:var(--text2);">${t('step_tz_explain')}</small><br>
-      <span class="eq">${t('step_tz_result')}: ${globalCTimezone>=0?'+':''}${globalCTimezone.toFixed(3)} ${t('hours_unit')} (${tzH}${t('hours_unit')} ${tzM}${t('min_unit')})</span>
+      <span class="eq">${t('step_tz_result')}: ${globalCTimezone>=0?'+':''}${globalCTimezone.toFixed(3)} ${t('hours_unit')} (${tzH}${t('hours_unit')} ${tzM}${t('min_unit')})</span><br>
+      <small style="color:var(--text2);font-size:.82em;">${t('step_tz_note')}</small>
     </div></div>
 
     <div class="step"><div class="step-n">2</div><div class="step-t">
@@ -2233,7 +2242,8 @@ function renderResults(corr, utcOff, C_date){
         <span style="color:var(--text2);">${t('method_note_text')}</span>
       </div>
       <div style="margin-top:8px;">
-        <span class="eq">${t('step_date_precise')}: ${globalCDateOnly.toFixed(3)} ${t('hours_unit')}</span>
+        <span class="eq">${t('step_date_precise')}: ${globalCDateOnly.toFixed(3)} ${t('hours_unit')}</span><br>
+        <small style="color:var(--text2);font-size:.82em;">${t('step_date_precise_note')}</small>
       </div>
     </div></div>
 
@@ -2617,11 +2627,7 @@ function drawClockExplain(ccwDeg, C_date){
     <div style="font-size:.88rem;color:var(--text2);margin-bottom:12px;line-height:1.7;">
       ${t('clock_title')}<br>
       ${t('clock_explain_1')} <strong style="color:#4ecf8a;">${ccwDeg}°</strong>
-      ${t('clock_explain_3')}<br>
-      <span class="eq">${ccwDeg}° ÷ 15 = ${hr} ${t('hours_unit')}</span> &nbsp;+&nbsp;
-      <span class="eq">${t('clock_const')} ${(C_date||0).toFixed(2)} ${t('hours_unit')}</span> &nbsp;=&nbsp;
-      <strong style="color:var(--gold)">≈ ${timeStr}</strong><br>
-      <small style="color:var(--text2);">${t('clock_const_explain')}</small>
+      ${t('clock_explain_3')}
     </div>
     <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
       <svg width="220" height="220" viewBox="0 0 260 260" style="flex-shrink:0;">

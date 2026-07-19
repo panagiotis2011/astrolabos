@@ -1366,7 +1366,7 @@ const LANG_DATA = {
     step4_text: 'Παρατηρώ τον ουρανό και μετράω τη γωνία <strong>αντιωρολογιακά</strong> από την κατακόρυφο (ζενίθ) που διέρχεται από τον Πολικό, μέχρι τη γραμμή των δύο αστέρων Dubhe–Merak. <em>Κορυφή γωνίας: Πολικός αστέρας.</em>',
     step4_measured: 'Μετρημένη γωνία στις',
     step_tz_text: 'Καθορίζω τη ζώνη ώρας της τοποθεσίας μου:',
-    step_tz_explain: 'Η Ελλάδα βρίσκεται σε ζώνη ώρας UTC+2 (χειμώνα) ή UTC+3 (καλοκαίρι, θερινή ώρα). Αυτή η διαφορά από τη διεθνή ώρα (UTC) πρέπει να ληφθεί υπόψη.',
+    step_tz_explain: 'Η τοποθεσία {loc} έχει τη δική της ζώνη ώρας — η διαφορά της από τη διεθνή ώρα (UTC) πρέπει να ληφθεί υπόψη στον υπολογισμό.',
     step_tz_note: 'Δεν είναι ακριβώς 3 ώρες: η αστρική ημέρα είναι λίγο μικρότερη από την ηλιακή, και ο Πολικός δεν είναι ακριβώς στον ουράνιο πόλο — αυτά προσθέτουν μια μικρή διαφορά.',
 
     step_tz_result: 'Συνεισφορά ζώνης ώρας',
@@ -1377,7 +1377,11 @@ const LANG_DATA = {
     step_lon_short: 'Γεωγρ. μήκος:',
     step_date_short: 'Ημερολογιακή θέση:',
     step_date_precise: 'Ακριβής αστρονομική τιμή',
+    greenwich_angle_label: 'Γωνία στο Γκρίνουιτς',
+
     step_date_precise_note: 'Η γωνία CCW που θα είχε ο δείκτης στα μεσάνυχτα στο Γκρίνουιτς (γεωγρ. μήκος 0°, UTC+0) για αυτή την ημερομηνία, υπολογισμένη με πραγματικές θέσεις άστρων.',
+    step5_compare_note: 'Παρατήρησε ότι η «Ημερολογιακή θέση» εδώ (Βήμα 3) είναι πολύ διαφορετική από τη χονδρική διόρθωση της κλασικής μεθόδου («με το χέρι») που υπολόγισες παραπάνω — γιατί η πρώτη υπολογίζεται με πραγματική αστρονομία (θέση άστρων στο Γκρίνουιτς), ενώ η δεύτερη είναι μια απλή, χονδρική εκτίμηση βασισμένη μόνο στις ημέρες.',
+
 
 
     step4_convert: 'Μετατρέπω τη γωνία σε ώρες (÷15):',
@@ -1430,7 +1434,7 @@ const LANG_DATA = {
     clock_const: 'σταθ.',
     clock_const_explain: 'Η σταθερά αντιστοιχεί στη γωνία που θα είχε ο δείκτης στα μεσάνυχτα, για τη συγκεκριμένη ημερομηνία και τοποθεσία — περιλαμβάνει τη ζώνη ώρας και τη γεωγραφική θέση.',
     method_note_title: 'Σημείωση μεθόδου',
-    method_note_text: 'Αυτή είναι η κλασική μέθοδος «με το χέρι», χρήσιμη όταν βρίσκεσαι στο πεδίο χωρίς υπολογιστή — δίνει μια χονδρική διόρθωση βασισμένη μόνο στην ημερομηνία. Η εφαρμογή όμως υπολογίζει στο Βήμα 5 μια πολύ ακριβέστερη σταθερά με πραγματική αστρονομία (θέσεις άστρων), η οποία περιλαμβάνει επιπλέον τη ζώνη ώρας και το γεωγραφικό σου μήκος — γι\' αυτό τα δύο νούμερα διαφέρουν σημαντικά.',
+    method_note_text: 'Αυτή είναι η κλασική μέθοδος «με το χέρι», χρήσιμη όταν βρίσκεσαι στο πεδίο χωρίς υπολογιστή — δίνει μια χονδρική διόρθωση βασισμένη μόνο στην ημερομηνία, χωρίς να λαμβάνει υπόψη τη ζώνη ώρας ή το γεωγραφικό μήκος.',
 
 
     clock_polaris_label: 'Πολικός',
@@ -1548,7 +1552,7 @@ const LANG_DATA = {
     step4_text: 'Observe the sky and measure the angle <strong>counter-clockwise</strong> from the vertical (zenith) through Polaris, to the Dubhe–Merak line. <em>Angle vertex: Polaris.</em>',
     step4_measured: 'Measured angle at',
     step_tz_text: 'I determine the time zone of my location:',
-    step_tz_explain: 'Greece is in time zone UTC+2 (winter) or UTC+3 (summer, daylight saving). This difference from international time (UTC) must be taken into account.',
+    step_tz_explain: 'The location {loc} has its own time zone — its difference from international time (UTC) must be taken into account in the calculation.',
     step_tz_note: 'Not exactly 3 hours: the sidereal day is slightly shorter than the solar day, and Polaris isn\'t exactly at the celestial pole — these add a small difference.',
 
     step_tz_result: 'Time zone contribution',
@@ -1559,7 +1563,11 @@ const LANG_DATA = {
     step_lon_short: 'Longitude:',
     step_date_short: 'Calendar position:',
     step_date_precise: 'Precise astronomical value',
+    greenwich_angle_label: 'Angle at Greenwich',
+
     step_date_precise_note: 'The CCW angle the pointer would have at midnight in Greenwich (0° longitude, UTC+0) for this date, computed from real star positions.',
+    step5_compare_note: 'Notice that the "Calendar position" here (Step 3) is quite different from the rough correction of the classical "by hand" method you calculated above — because the former is computed using real astronomy (star position at Greenwich), while the latter is a simple, rough estimate based only on day-counting.',
+
 
 
     step4_convert: 'Convert the angle to hours (÷15):',
@@ -1608,7 +1616,7 @@ const LANG_DATA = {
     clock_const: 'const.',
     clock_const_explain: 'The constant corresponds to the angle the pointer would have at midnight, for this specific date and location — it includes the time zone and geographic position.',
     method_note_title: 'Method note',
-    method_note_text: 'This is the classical "by hand" method, useful when you\'re out in the field without a computer — it gives a rough correction based only on the date. However, the app calculates in Step 5 a much more precise constant using real astronomy (actual star positions), which also includes your time zone and longitude — that is why the two numbers differ significantly.',
+    method_note_text: 'This is the classical "by hand" method, useful when you\'re out in the field without a computer — it gives a rough correction based only on the date, without accounting for time zone or longitude.',
 
 
     clock_polaris_label: 'Polaris',
@@ -1695,6 +1703,7 @@ let globalCDate = 0;
 let globalCTimezone = 0;
 let globalCLongitude = 0;
 let globalCDateOnly = 0;
+let globalGreenwichAngle = 0;
 
 // ── Init ──
 const MONTH_NAMES_EL = ['Ιανουάριος','Φεβρουάριος','Μάρτιος','Απρίλιος','Μάιος','Ιούνιος','Ιούλιος','Αύγουστος','Σεπτέμβριος','Οκτώβριος','Νοέμβριος','Δεκέμβριος'];
@@ -2145,15 +2154,17 @@ function calculate(){
     const pD = raDecToAltAz(STARS.dubhe.ra,   STARS.dubhe.dec,   lat, lon, mDate);
     const paM = posAngleStars(pP, pD);
     const ccwM = (360 - paM + 360) % 360;
-    return (0 - ccwM/15 + 240) % 24;
+    return { hours: (0 - ccwM/15 + 240) % 24, angleDeg: ccwM };
   }
 
   // ── Τηλεσκοπική ανάλυση: C_date = C_τοπ.μήκους + C_ζώνης + C_ημερολογιακή ──
   // (η σειρά αφαίρεσης εγγυάται ότι το άθροισμα ισούται ΑΚΡΙΒΩΣ με τη σωστή σταθερά)
-  const C_dateOnly  = computeMidnightConstant(dateStr, locState.lat, 0, 0);
-  const C_lonRaw    = computeMidnightConstant(dateStr, locState.lat, locState.lon, 0);
+  const dateOnlyResult = computeMidnightConstant(dateStr, locState.lat, 0, 0);
+  const C_dateOnly      = dateOnlyResult.hours;
+  const greenwichAngle  = dateOnlyResult.angleDeg;
+  const C_lonRaw    = computeMidnightConstant(dateStr, locState.lat, locState.lon, 0).hours;
   const C_longitude = C_lonRaw - C_dateOnly;
-  const C_full      = computeMidnightConstant(dateStr, locState.lat, locState.lon, utcOffset);
+  const C_full      = computeMidnightConstant(dateStr, locState.lat, locState.lon, utcOffset).hours;
   const C_timezone  = C_full - C_lonRaw;
 
   const C_date = C_full;
@@ -2161,6 +2172,7 @@ function calculate(){
   globalCTimezone  = C_timezone;
   globalCLongitude = C_longitude;
   globalCDateOnly  = C_dateOnly;
+  globalGreenwichAngle = greenwichAngle;
 
   const baseMs = new Date(dateStr+'T00:00:00Z').getTime();
 
@@ -2223,7 +2235,7 @@ function renderResults(corr, utcOff, C_date){
   document.getElementById('stepsContent').innerHTML=`
     <div class="step"><div class="step-n">1</div><div class="step-t">
       ${t('step_tz_text')} <strong>UTC+${utcOff}</strong> (${utcOff===3?t('dst_summer_label'):t('dst_winter_label')})<br>
-      <small style="color:var(--text2);">${t('step_tz_explain')}</small><br>
+      <small style="color:var(--text2);">${t('step_tz_explain').replace('{loc}', getDisplayLocationName())}</small><br>
       <span class="eq">${t('step_tz_result')}: ${globalCTimezone>=0?'+':''}${globalCTimezone.toFixed(3)} ${t('hours_unit')} (${tzH}${t('hours_unit')} ${tzM}${t('min_unit')})</span><br>
       <small style="color:var(--text2);font-size:.82em;">${t('step_tz_note')}</small>
     </div></div>
@@ -2242,6 +2254,8 @@ function renderResults(corr, utcOff, C_date){
         <span style="color:var(--text2);">${t('method_note_text')}</span>
       </div>
       <div style="margin-top:8px;">
+        <span class="eq">${t('greenwich_angle_label')}: ${globalGreenwichAngle.toFixed(1)}°</span> &nbsp;→&nbsp;
+        <span class="eq">${globalGreenwichAngle.toFixed(1)}° ÷ 15 = ${(globalGreenwichAngle/15).toFixed(3)} ${t('hours_unit')}</span><br>
         <span class="eq">${t('step_date_precise')}: ${globalCDateOnly.toFixed(3)} ${t('hours_unit')}</span><br>
         <small style="color:var(--text2);font-size:.82em;">${t('step_date_precise_note')}</small>
       </div>
@@ -2738,7 +2752,10 @@ function updateStep5(d){
           <small style="color:var(--text2);margin-left:8px;">(${t('s5_obstime')}: ${hourLabel})</small>
         </td>
       </tr>
-    </table>`;
+    </table>
+    <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);font-size:.85rem;color:var(--text2);">
+      ${t('step5_compare_note')}
+    </div>`;
 }
 
 </script>

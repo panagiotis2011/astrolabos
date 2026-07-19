@@ -1368,12 +1368,17 @@ const LANG_DATA = {
     step_tz_text: 'Καθορίζω τη ζώνη ώρας της τοποθεσίας μου:',
     step_tz_explain: 'Η τοποθεσία {loc} έχει τη δική της ζώνη ώρας — η διαφορά της από τη διεθνή ώρα (UTC) πρέπει να ληφθεί υπόψη στον υπολογισμό.',
     step_tz_note: 'Δεν είναι ακριβώς 3 ώρες: η αστρική ημέρα είναι λίγο μικρότερη από την ηλιακή, και ο Πολικός δεν είναι ακριβώς στον ουράνιο πόλο — αυτά προσθέτουν μια μικρή διαφορά.',
+    step3_new_text: 'Υπολογίζω πόση ώρα έχει «κερδίσει» ο ουρανός λόγω της ημερομηνίας — συγκρίνοντας με το πώς θα φαινόταν στο Γκρίνουιτς, τα μεσάνυχτα UTC αυτής της ημέρας:',
+    step3_reverse_explain: 'Μετράω αντίστροφα από τις 24:00 (γιατί η γωνία αυξάνεται καθώς περνά η ώρα, άρα μια μεγάλη γωνία στα μεσάνυχτα σημαίνει ότι έχουμε ήδη «προχωρήσει» πολύ μέσα στη νύχτα):',
+
 
     step_tz_result: 'Συνεισφορά ζώνης ώρας',
     step_tz_short: 'Ζώνη ώρας:',
     step_lon_text: 'Καθορίζω το γεωγραφικό μήκος της τοποθεσίας μου:',
     step_lon_explain: 'Κάθε τόπος στη Γη έχει διαφορετική τοπική αστρική ώρα ανάλογα με το γεωγραφικό του μήκος (15° = 1 ώρα διαφορά).',
     step_lon_result: 'Συνεισφορά γεωγρ. μήκους',
+    step_lon_sign_note: 'Πρόσημο: ανατολικά (θετικό γεωγρ. μήκος) η συνεισφορά είναι αρνητική· δυτικά (αρνητικό γεωγρ. μήκος) είναι θετική. Δηλαδή: συνεισφορά ≈ −γεωγρ. μήκος ÷ 15.',
+
     step_lon_short: 'Γεωγρ. μήκος:',
     step_date_short: 'Ημερολογιακή θέση:',
     step_date_precise: 'Ακριβής αστρονομική τιμή',
@@ -1554,12 +1559,17 @@ const LANG_DATA = {
     step_tz_text: 'I determine the time zone of my location:',
     step_tz_explain: 'The location {loc} has its own time zone — its difference from international time (UTC) must be taken into account in the calculation.',
     step_tz_note: 'Not exactly 3 hours: the sidereal day is slightly shorter than the solar day, and Polaris isn\'t exactly at the celestial pole — these add a small difference.',
+    step3_new_text: 'I calculate how much time the sky has "gained" due to the date — comparing to how it would appear at Greenwich, at UTC midnight on this day:',
+    step3_reverse_explain: 'I count backward from 24:00 (because the angle increases as time passes, so a large angle at midnight means we have already progressed far into the night):',
+
 
     step_tz_result: 'Time zone contribution',
     step_tz_short: 'Time zone:',
     step_lon_text: 'I determine the longitude of my location:',
     step_lon_explain: 'Every place on Earth has a different local sidereal time depending on its longitude (15° = 1 hour difference).',
     step_lon_result: 'Longitude contribution',
+    step_lon_sign_note: 'Sign: east (positive longitude) gives a negative contribution; west (negative longitude) gives a positive one. That is: contribution ≈ −longitude ÷ 15.',
+
     step_lon_short: 'Longitude:',
     step_date_short: 'Calendar position:',
     step_date_precise: 'Precise astronomical value',
@@ -2243,22 +2253,17 @@ function renderResults(corr, utcOff, C_date){
     <div class="step"><div class="step-n">2</div><div class="step-t">
       ${t('step_lon_text')} <strong>${locState.lon.toFixed(2)}°</strong><br>
       <small style="color:var(--text2);">${t('step_lon_explain')}</small><br>
-      <span class="eq">${t('step_lon_result')}: ${lonSign}${Math.abs(lonH).toFixed(3)} ${t('hours_unit')} (${lonSign}${Math.abs(lonHInt)}${t('hours_unit')} ${lonM}${t('min_unit')})</span>
+      <span class="eq">${t('step_lon_result')}: ${lonSign}${Math.abs(lonH).toFixed(3)} ${t('hours_unit')} (${lonSign}${Math.abs(lonHInt)}${t('hours_unit')} ${lonM}${t('min_unit')})</span><br>
+      <small style="color:var(--text2);font-size:.82em;">${t('step_lon_sign_note')}</small>
     </div></div>
 
-    <div class="step"><div class="step-n">3</div><div class="step-t">${t('step1_text')} <strong>${corr.refLabel}</strong><br>
-      <span class="eq">${corr.dayOffset} ${t('days_label')} = ${corr.corrDeg}°</span> &nbsp;→&nbsp; <span class="eq">${corr.corrDeg}° ÷ 15 = ${corr.corrHInt}${t('hours_unit')} ${corr.corrMin}${t('min_unit')}</span><br>
-      <small style="color:var(--text2);">${t('step2_explain')}</small>
-      <div style="margin-top:10px;padding:10px 14px;background:#1a1000;border:1px solid #6a4400;border-radius:8px;font-size:.88rem;line-height:1.6;">
-        <strong style="color:#f0a040;">⚠ ${t('method_note_title')}</strong><br>
-        <span style="color:var(--text2);">${t('method_note_text')}</span>
-      </div>
-      <div style="margin-top:8px;">
-        <span class="eq">${t('greenwich_angle_label')}: ${globalGreenwichAngle.toFixed(1)}°</span> &nbsp;→&nbsp;
-        <span class="eq">${globalGreenwichAngle.toFixed(1)}° ÷ 15 = ${(globalGreenwichAngle/15).toFixed(3)} ${t('hours_unit')}</span><br>
-        <span class="eq">${t('step_date_precise')}: ${globalCDateOnly.toFixed(3)} ${t('hours_unit')}</span><br>
-        <small style="color:var(--text2);font-size:.82em;">${t('step_date_precise_note')}</small>
-      </div>
+    <div class="step"><div class="step-n">3</div><div class="step-t">${t('step3_new_text')}<br>
+      <span class="eq">${t('greenwich_angle_label')}: ${globalGreenwichAngle.toFixed(1)}°</span><br>
+      <span class="eq">${globalGreenwichAngle.toFixed(1)}° ÷ 15 = ${(globalGreenwichAngle/15).toFixed(3)} ${t('hours_unit')}</span><br>
+      <small style="color:var(--text2);">${t('step3_reverse_explain')}</small><br>
+      <span class="eq">24${t('hours_unit')} − ${(globalGreenwichAngle/15).toFixed(3)}${t('hours_unit')} = ${globalCDateOnly.toFixed(3)} ${t('hours_unit')}</span><br>
+      <strong><span class="eq">${t('step_date_precise')}: ${globalCDateOnly.toFixed(3)} ${t('hours_unit')}</span></strong><br>
+      <small style="color:var(--text2);font-size:.82em;">${t('step_date_precise_note')}</small>
     </div></div>
 
     <div class="step"><div class="step-n">4</div><div class="step-t">${t('step4_text')}<br>
@@ -2752,10 +2757,7 @@ function updateStep5(d){
           <small style="color:var(--text2);margin-left:8px;">(${t('s5_obstime')}: ${hourLabel})</small>
         </td>
       </tr>
-    </table>
-    <div style="margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);font-size:.85rem;color:var(--text2);">
-      ${t('step5_compare_note')}
-    </div>`;
+    </table>`;
 }
 
 </script>

@@ -2258,7 +2258,9 @@ function renderResults(corr, utcOff, C_date){
     </div>
   `;
 
-  const tzH = Math.floor(globalCTimezone), tzM = Math.round((globalCTimezone%1)*60);
+  const tzAbs = Math.abs(globalCTimezone);
+  const tzH = Math.floor(tzAbs), tzM = Math.round((tzAbs%1)*60);
+  const tzSign = globalCTimezone < 0 ? '−' : '+';
   const lonH = globalCLongitude, lonHInt = Math.trunc(lonH), lonM = Math.round(Math.abs(lonH%1)*60);
   const lonSign = lonH < 0 ? '−' : '+';
 
@@ -2267,7 +2269,7 @@ function renderResults(corr, utcOff, C_date){
     <div class="step"><div class="step-n">1</div><div class="step-t">
       ${t('step_tz_text')} <strong>UTC${formatUtcOffset(utcOff)}</strong> ${getDstLabelForLocation(getDateStr()) ? '('+getDstLabelForLocation(getDateStr())+')' : ''}<br>
       <small style="color:var(--text2);">${t('step_tz_explain').replace('{loc}', getDisplayLocationName())}</small><br>
-      <span class="eq">${t('step_tz_result')}: ${globalCTimezone>=0?'+':''}${globalCTimezone.toFixed(3)} ${t('hours_unit')} (${tzH}${t('hours_unit')} ${tzM}${t('min_unit')})</span><br>
+      <span class="eq">${t('step_tz_result')}: ${globalCTimezone>=0?'+':''}${globalCTimezone.toFixed(3)} ${t('hours_unit')} (${tzSign}${tzH}${t('hours_unit')} ${tzM}${t('min_unit')})</span><br>
       <small style="color:var(--text2);font-size:.82em;">${t('step_tz_note')}</small>
     </div></div>
 

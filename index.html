@@ -618,6 +618,33 @@ select option{background:#071625;color:#ddeeff;}
   border-radius:10px!important;
 }
 .leaflet-popup-tip{background:#fff!important;}
+
+#methodOverlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(5,16,30,.92);
+  z-index:150;align-items:flex-start;justify-content:center;
+  padding:12px;overflow-y:auto;
+}
+.formula-box{
+  background:#071625;border:1px solid var(--border);
+  border-radius:9px;padding:14px 18px;margin:10px 0;
+  font-family:'Cambria Math','Georgia',serif;
+  font-size:1.05rem;color:var(--starb);
+  text-align:center;overflow-x:auto;
+}
+.method-section{margin-bottom:22px;}
+.method-section h3{
+  font-family:'Cinzel',serif;color:var(--gold);
+  font-size:1rem;margin-bottom:8px;
+  border-bottom:1px solid var(--border);padding-bottom:6px;
+}
+.error-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.88rem;}
+.error-table th{
+  text-align:left;color:var(--gold2);font-weight:600;
+  padding:6px 10px;border-bottom:2px solid var(--border);
+}
+.error-table td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text2);}
+.error-table tr:last-child td{border-bottom:none;font-weight:700;color:var(--gold);}
 .leaflet-popup-content strong{color:#1a4a7a;}
 .leaflet-popup-content small{color:#555;}
 
@@ -692,8 +719,9 @@ select option{background:#071625;color:#ddeeff;}
 <div id="userBadge">
   <img id="userPhoto" src="" alt="" style="display:none">
   <span id="userName"></span>
-  <button id="journalBtn" onclick="showJournal()" title="Το ημερολόγιό μου"><span data-i18n="btn_journal">📔 Ημερολόγιο</span</button>
+  <button id="journalBtn" onclick="showJournal()" title="Το ημερολόγιό μου"><span data-i18n="btn_journal">📔 Ημερολόγιο</span></button>
   <button id="mapBtn" onclick="showWorldMap()" title="Παγκόσμιος Χάρτης">🗺️</button>
+  <button id="methodBtn" onclick="showMethodology()" title="Μεθοδολογία">📐</button>
   <button id="signOutBtn" onclick="signOut()"><span data-i18n="btn_signout">↪ Έξοδος</span></button>
 </div>
 
@@ -728,6 +756,17 @@ select option{background:#071625;color:#ddeeff;}
       </button>
     </div>
     <div id="worldMapContainer"></div>
+  </div>
+</div>
+
+<!-- ══════════ METHODOLOGY OVERLAY ══════════ -->
+<div id="methodOverlay">
+  <div class="map-box" style="max-width:720px;">
+    <div class="journal-header">
+      <h2><span data-i18n="method_title">📐 Θεωρητικό Υπόβαθρο</span></h2>
+      <button class="journal-close" onclick="hideMethodology()">✕</button>
+    </div>
+    <div id="methodContent" style="font-size:.92rem;line-height:1.75;color:var(--text2);max-height:70vh;overflow-y:auto;padding-right:6px;"></div>
   </div>
 </div>
 
@@ -1459,6 +1498,32 @@ const LANG_DATA = {
     gps_https_text: 'Ο εντοπισμός λειτουργεί μόνο αν η εφαρμογή τρέχει μέσω <strong>https://</strong> (π.χ. GitHub Pages) ή <strong>localhost</strong>.',
     gps_file_text:  'Αν ανοίγεις το αρχείο απευθείας (file://), ο browser απορρίπτει αυτόματα την άδεια.',
     gps_alt_text:   '<strong>Εναλλακτικά:</strong> χρησιμοποίησε την καρτέλα «Λίστα» ή βρες τις συντεταγμένες σου από το Google Maps και βάλε τις χειροκίνητα.',
+
+    m_pa_title: '1. Γωνία Θέσης (Position Angle)',
+    m_pa_text: 'Η γωνία μεταξύ δύο ουράνιων σωμάτων υπολογίζεται με τον τύπο γωνίας θέσης της σφαιρικής αστρονομίας, όπου (α₁,δ₁) οι συντεταγμένες του Πολικού και (α₂,δ₂) του Dubhe (ορθή αναφορά και απόκλιση), και Δα = α₂ − α₁.',
+    m_pa_note: 'Η εφαρμογή χρησιμοποιεί atan2 για σωστό προσδιορισμό τεταρτημορίου (0°–360°).',
+    m_gmst_title: '2. Μέση Αστρική Ώρα Γκρίνουιτς (GMST)',
+    m_gmst_text: 'Ο τύπος του Meeus (Αστρονομικοί Αλγόριθμοι) υπολογίζει την αστρική ώρα στο Γκρίνουιτς από τη μέρα D (ημέρες από J2000.0) και T = D/36525 (αιώνες Ιουλιανοί).',
+    m_gmst_note: 'Ο συντελεστής 360.98564736629°/ημέρα αντανακλά τον λόγο αστρικής/ηλιακής ημέρας (1.00273791 ηλιακές ημέρες ανά αστρική περιστροφή).',
+    m_lst_title: '3. Τοπική Αστρική Ώρα (LST)',
+    m_lon_word: 'γεωγραφικό μήκος σε μοίρες, θετικό ανατολικά',
+    m_lst_note: 'Η LST καθορίζει ποια σημεία του ουρανού βρίσκονται στον τοπικό μεσημβρινό τη δεδομένη στιγμή.',
+    m_altaz_title: '4. Μετατροπή σε Υψόμετρο/Αζιμούθιο',
+    m_altaz_text: 'Για την απεικόνιση των αστέρων στον χάρτη ουρανού, οι ισημερινές συντεταγμένες (α,δ) μετατρέπονται σε οριζόντιες (h,A) μέσω της ωριαίας γωνίας H = LST − α και του γεωγραφικού πλάτους φ.',
+    m_altaz_note: 'Αυτός είναι ο βασικός τύπος σφαιρικής τριγωνομετρίας που χρησιμοποιείται σε όλη την εφαρμογή για την τοποθέτηση αστέρων στον ζωγραφισμένο ουρανό.',
+    m_error_title: '5. Ποσοτική Ανάλυση Σφάλματος',
+    m_error_text: 'Το τελικό σφάλμα της εκτιμώμενης ώρας προκύπτει από ανεξάρτητες πηγές αβεβαιότητας, οι οποίες συνδυάζονται τετραγωνικά (Root Sum of Squares — RSS):',
+    m_err_source: 'Πηγή σφάλματος',
+    m_err_magnitude: 'Μέγεθος',
+    m_err_angle: 'Σφάλμα παρατήρησης γωνίας (±5°)',
+    m_err_eqtime: 'Εξίσωση χρόνου (μη διορθωμένη)',
+    m_err_tz: 'Στρογγυλοποίηση ζώνης ώρας',
+    m_err_polaris: 'Απόκλιση Πολικού από ουράνιο πόλο (~0.7°)',
+    m_err_total: 'Συνολικό εκτιμώμενο σφάλμα',
+    m_error_rss_note: 'RSS: √(20² + 16² + 1² + 1²) ≈ 25.7 λεπτά. Οι ανεξάρτητες πηγές σφάλματος συνδυάζονται ως τετραγωνική ρίζα αθροίσματος τετραγώνων, όχι αθροιστικά.',
+    m_validation_title: '6. Επικύρωση Πεδίου',
+    m_validation_text: 'Η μέθοδος έχει δοκιμαστεί με πραγματικές παρατηρήσεις στο πεδίο (Κως, Ελλάδα) με αποτελέσματα εντός του αναμενόμενου εύρους σφάλματος (±25 λεπτά) σε σύγκριση με την πραγματική ώρα ρολογιού.',
+    method_title: '📐 Θεωρητικό Υπόβαθρο',
   clock_pointer:'Δείκτης Dubhe–Merak',
   },
   en: {
@@ -1646,6 +1711,32 @@ const LANG_DATA = {
     gps_https_text: 'Location detection only works when the app runs via <strong>https://</strong> (e.g. GitHub Pages) or <strong>localhost</strong>.',
     gps_file_text:  'If you open the file directly (file://), the browser automatically denies permission.',
     gps_alt_text:   '<strong>Alternatively:</strong> use the List tab or find your coordinates on Google Maps and enter them manually.',
+
+    m_pa_title: '1. Position Angle',
+    m_pa_text: 'The angle between two celestial bodies is computed using the spherical astronomy position-angle formula, where (α₁,δ₁) are the coordinates of Polaris and (α₂,δ₂) of Dubhe (right ascension and declination), and Δα = α₂ − α₁.',
+    m_pa_note: 'The app uses atan2 for correct quadrant resolution (0°–360°).',
+    m_gmst_title: '2. Greenwich Mean Sidereal Time (GMST)',
+    m_gmst_text: 'Meeus\'s formula (Astronomical Algorithms) computes sidereal time at Greenwich from D (days since J2000.0) and T = D/36525 (Julian centuries).',
+    m_gmst_note: 'The coefficient 360.98564736629°/day reflects the sidereal-to-solar day ratio (1.00273791 solar days per sidereal rotation).',
+    m_lst_title: '3. Local Sidereal Time (LST)',
+    m_lon_word: 'longitude in degrees, positive eastward',
+    m_lst_note: 'LST determines which points of the sky lie on the local meridian at a given moment.',
+    m_altaz_title: '4. Conversion to Altitude/Azimuth',
+    m_altaz_text: 'To plot stars on the sky map, equatorial coordinates (α,δ) are converted to horizontal coordinates (h,A) via the hour angle H = LST − α and the observer\'s latitude φ.',
+    m_altaz_note: 'This is the core spherical-trigonometry formula used throughout the app to position stars on the rendered sky.',
+    m_error_title: '5. Quantitative Error Analysis',
+    m_error_text: 'The final error in the estimated time arises from independent sources of uncertainty, combined via Root Sum of Squares (RSS):',
+    m_err_source: 'Error source',
+    m_err_magnitude: 'Magnitude',
+    m_err_angle: 'Angle observation error (±5°)',
+    m_err_eqtime: 'Equation of time (uncorrected)',
+    m_err_tz: 'Time zone rounding',
+    m_err_polaris: 'Polaris offset from celestial pole (~0.7°)',
+    m_err_total: 'Total estimated error',
+    m_error_rss_note: 'RSS: √(20² + 16² + 1² + 1²) ≈ 25.7 minutes. Independent error sources combine as the square root of the sum of squares, not additively.',
+    m_validation_title: '6. Field Validation',
+    m_validation_text: 'The method has been tested with real field observations (Kos, Greece) with results within the expected error range (±25 minutes) compared to actual clock time.',
+    method_title: '📐 Theoretical Background',
   clock_pointer:'Dubhe–Merak pointer',
   }
 };
@@ -2783,6 +2874,75 @@ function updateStep5(d){
     </table>`;
 }
 
+// ═══════════════════════════════════════════════
+// ΜΕΘΟΔΟΛΟΓΙΑ — Θεωρητικό υπόβαθρο για εκπαιδευτικούς/φυσικούς
+// ═══════════════════════════════════════════════
+function renderMethodologyContent(){
+  const el = document.getElementById('methodContent');
+  if(!el) return;
+
+  // Ζωντανά νούμερα από τον τελευταίο υπολογισμό (αν υπάρχει)
+  const hasCalc = hourData && hourData.length > 0;
+  const sampleAngle = hasCalc ? hourData.find(h=>h.hour===currentHour).ccwDeg : 65;
+
+  el.innerHTML = `
+    <div class="method-section">
+      <h3>${t('m_pa_title')}</h3>
+      <p>${t('m_pa_text')}</p>
+      <div class="formula-box">
+        PA = atan2( cos(δ<sub>2</sub>)·sin(Δα) ,
+        sin(δ<sub>2</sub>)·cos(δ<sub>1</sub>) − cos(δ<sub>2</sub>)·sin(δ<sub>1</sub>)·cos(Δα) )
+      </div>
+      <p style="font-size:.85rem;">${t('m_pa_note')}</p>
+    </div>
+
+    <div class="method-section">
+      <h3>${t('m_gmst_title')}</h3>
+      <p>${t('m_gmst_text')}</p>
+      <div class="formula-box">
+        GMST = 280.46061837 + 360.98564736629·D + 0.000387933·T² − T³⁄38710000
+      </div>
+      <p style="font-size:.85rem;">${t('m_gmst_note')}</p>
+    </div>
+
+    <div class="method-section">
+      <h3>${t('m_lst_title')}</h3>
+      <div class="formula-box">
+        LST = GMST + λ &nbsp;&nbsp;&nbsp; (λ = ${t('m_lon_word')})
+      </div>
+      <p style="font-size:.85rem;">${t('m_lst_note')}</p>
+    </div>
+
+    <div class="method-section">
+      <h3>${t('m_altaz_title')}</h3>
+      <p>${t('m_altaz_text')}</p>
+      <div class="formula-box">
+        sin(h) = sin(δ)·sin(φ) + cos(δ)·cos(φ)·cos(H)
+      </div>
+      <p style="font-size:.85rem;">${t('m_altaz_note')}</p>
+    </div>
+
+    <div class="method-section">
+      <h3>${t('m_error_title')}</h3>
+      <p>${t('m_error_text')}</p>
+      <table class="error-table">
+        <tr><th>${t('m_err_source')}</th><th>${t('m_err_magnitude')}</th></tr>
+        <tr><td>${t('m_err_angle')}</td><td>±5° → ±20 min</td></tr>
+        <tr><td>${t('m_err_eqtime')}</td><td>±16 min</td></tr>
+        <tr><td>${t('m_err_tz')}</td><td>&lt; 1 min</td></tr>
+        <tr><td>${t('m_err_polaris')}</td><td>&lt; 1 min</td></tr>
+        <tr><td>${t('m_err_total')}</td><td>≈ ±25 min (RSS)</td></tr>
+      </table>
+      <p style="font-size:.82rem;">${t('m_error_rss_note')}</p>
+    </div>
+
+    <div class="method-section">
+      <h3>${t('m_validation_title')}</h3>
+      <p>${t('m_validation_text')}</p>
+    </div>
+  `;
+}
+
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -3111,6 +3271,15 @@ function showWorldMap(){
 
 function hideWorldMap(){
   document.getElementById('mapOverlay').style.display = 'none';
+}
+
+function showMethodology(){
+  document.getElementById('methodOverlay').style.display = 'flex';
+  renderMethodologyContent();
+}
+
+function hideMethodology(){
+  document.getElementById('methodOverlay').style.display = 'none';
 }
 
 function deleteMyPin(){

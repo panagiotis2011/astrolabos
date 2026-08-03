@@ -507,26 +507,36 @@ select option{background:#071625;color:#ddeeff;}
 /* ── USER BADGE (top-right) ── */
 #userBadge{
   position:fixed;top:12px;right:12px;
+  z-index:200;
+}
+#userMenuTrigger{
   background:var(--panel);border:1px solid var(--border);
-  border-radius:20px;padding:6px 14px 6px 10px;
-  display:none;align-items:center;gap:8px;
-  font-size:.85rem;color:var(--text2);
-  z-index:50;box-shadow:0 2px 12px rgba(0,0,0,.3);
+  border-radius:20px;padding:8px 14px;
+  font-size:.9rem;color:var(--text2);
+  box-shadow:0 2px 12px rgba(0,0,0,.3);
+  transition:.15s;
 }
-#userBadge img{width:24px;height:24px;border-radius:50%;}
-#userBadge span{color:var(--text);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-#signOutBtn{
-  background:none;border:none;color:var(--text2);
-  font-size:.8rem;cursor:pointer;padding:2px 4px;
-  border-radius:4px;transition:.15s;
+#userMenuTrigger:hover{border-color:var(--gold2);}
+#userBadge img{width:26px;height:26px;border-radius:50%;}
+#userBadge #userName{color:var(--text);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+#userMenuDropdown{
+  position:absolute;top:calc(100% + 8px);right:0;
+  background:var(--panel);border:1px solid var(--border);
+  border-radius:12px;padding:8px;
+  min-width:220px;
+  box-shadow:0 8px 28px rgba(0,0,0,.45);
 }
-#signOutBtn:hover{color:var(--red);}
-#journalBtn{
-  background:none;border:none;color:var(--text2);
-  font-size:1.1rem;cursor:pointer;padding:2px 6px;
-  border-radius:4px;transition:.15s;
+#userMenuDropdown button{
+  display:flex;align-items:center;gap:10px;
+  width:100%;background:none;border:none;
+  color:var(--text);font-size:.95rem;
+  padding:10px 12px;border-radius:8px;
+  cursor:pointer;transition:.15s;text-align:left;
 }
-#journalBtn:hover{color:var(--gold);transform:scale(1.1);}
+#userMenuDropdown button:hover{background:var(--accent);}
+#userMenuDropdown button span:first-child{font-size:1.15rem;width:22px;text-align:center;}
+#signOutBtn{color:var(--text2);}
+#signOutBtn:hover{color:var(--red);background:rgba(255,107,107,.1);}
 
 /* ── JOURNAL OVERLAY ── */
 #journalOverlay{
@@ -584,13 +594,6 @@ select option{background:#071625;color:#ddeeff;}
   border-color:#ff4444;
   color:#ffaaaa;
 }
-
-#mapBtn{
-  background:none;border:none;color:var(--text2);
-  font-size:1.1rem;cursor:pointer;padding:2px 6px;
-  border-radius:4px;transition:.15s;
-}
-#mapBtn:hover{color:var(--gold);transform:scale(1.1);}
 
 /* ── WORLD MAP OVERLAY ── */
 #mapOverlay{
@@ -717,12 +720,18 @@ select option{background:#071625;color:#ddeeff;}
 
 <!-- ══════════ USER BADGE ══════════ -->
 <div id="userBadge">
-  <img id="userPhoto" src="" alt="" style="display:none">
-  <span id="userName"></span>
-  <button id="journalBtn" onclick="showJournal()" title="Το ημερολόγιό μου"><span data-i18n="btn_journal">📔 Ημερολόγιο</span></button>
-  <button id="mapBtn" onclick="showWorldMap()" title="Παγκόσμιος Χάρτης">🗺️</button>
-  <button id="methodBtn" onclick="showMethodology()" title="Μεθοδολογία">📐</button>
-  <button id="signOutBtn" onclick="signOut()"><span data-i18n="btn_signout">↪ Έξοδος</span></button>
+  <div id="userMenuTrigger" onclick="toggleUserMenu()" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+    <img id="userPhoto" src="" alt="" style="display:none">
+    <span id="userName"></span>
+    <span style="font-size:.7rem;color:var(--text2);">▾</span>
+  </div>
+  <div id="userMenuDropdown" style="display:none;">
+    <button id="journalBtn" onclick="showJournal(); toggleUserMenu();"><span>📔</span> <span data-i18n="btn_journal">Ημερολόγιο</span></button>
+    <button id="mapBtn" onclick="showWorldMap(); toggleUserMenu();"><span>🗺️</span> <span data-i18n="btn_map">Παγκόσμιος Χάρτης</span></button>
+    <button id="methodBtn" onclick="showMethodology(); toggleUserMenu();"><span>📐</span> <span data-i18n="method_title_short">Μεθοδολογία</span></button>
+    <div style="height:1px;background:var(--border);margin:6px 0;"></div>
+    <button id="signOutBtn" onclick="signOut()"><span>↪</span> <span data-i18n="btn_signout">Έξοδος</span></button>
+  </div>
 </div>
 
 <!-- ══════════ JOURNAL OVERLAY ══════════ -->
@@ -1502,6 +1511,10 @@ const LANG_DATA = {
     m_pa_title: '1. Γωνία Θέσης (Position Angle)',
     m_pa_text: 'Η γωνία μεταξύ δύο ουράνιων σωμάτων υπολογίζεται με τον τύπο γωνίας θέσης της σφαιρικής αστρονομίας, όπου (α₁,δ₁) οι συντεταγμένες του Πολικού και (α₂,δ₂) του Dubhe (ορθή αναφορά και απόκλιση), και Δα = α₂ − α₁.',
     m_pa_note: 'Η εφαρμογή χρησιμοποιεί atan2 για σωστό προσδιορισμό τεταρτημορίου (0°–360°).',
+    m_pa_symbols: 'Όπου α = ορθή αναφορά (right ascension) και δ = απόκλιση (declination) — οι δύο βασικές ισημερινές συντεταγμένες κάθε άστρου.',
+    m_gmst_j2000: 'Το J2000.0 είναι η καθιερωμένη αστρονομική εποχή αναφοράς: 1η Ιανουαρίου 2000, 12:00 UTC. Το D μετρά πόσες ημέρες έχουν περάσει από αυτή τη σταθερή στιγμή αναφοράς μέχρι τη στιγμή του υπολογισμού.',
+    m_error_general_note: 'Ο παρακάτω πίνακας δείχνει ενδεικτικά, τυπικά μεγέθη σφάλματος για τη μέθοδο γενικά — δεν υπολογίζεται ξανά μέσα στην εφαρμογή για κάθε συγκεκριμένη παρατήρηση, καθώς το πραγματικό σφάλμα παρατήρησης γωνίας δεν είναι εκ των προτέρων γνωστό.',
+
     m_gmst_title: '2. Μέση Αστρική Ώρα Γκρίνουιτς (GMST)',
     m_gmst_text: 'Ο τύπος του Meeus (Αστρονομικοί Αλγόριθμοι) υπολογίζει την αστρική ώρα στο Γκρίνουιτς από τη μέρα D (ημέρες από J2000.0) και T = D/36525 (αιώνες Ιουλιανοί).',
     m_gmst_note: 'Ο συντελεστής 360.98564736629°/ημέρα αντανακλά τον λόγο αστρικής/ηλιακής ημέρας (1.00273791 ηλιακές ημέρες ανά αστρική περιστροφή).',
@@ -1521,9 +1534,8 @@ const LANG_DATA = {
     m_err_polaris: 'Απόκλιση Πολικού από ουράνιο πόλο (~0.7°)',
     m_err_total: 'Συνολικό εκτιμώμενο σφάλμα',
     m_error_rss_note: 'RSS: √(20² + 16² + 1² + 1²) ≈ 25.7 λεπτά. Οι ανεξάρτητες πηγές σφάλματος συνδυάζονται ως τετραγωνική ρίζα αθροίσματος τετραγώνων, όχι αθροιστικά.',
-    m_validation_title: '6. Επικύρωση Πεδίου',
-    m_validation_text: 'Η μέθοδος έχει δοκιμαστεί με πραγματικές παρατηρήσεις στο πεδίο (Κως, Ελλάδα) με αποτελέσματα εντός του αναμενόμενου εύρους σφάλματος (±25 λεπτά) σε σύγκριση με την πραγματική ώρα ρολογιού.',
     method_title: '📐 Θεωρητικό Υπόβαθρο',
+    method_title_short: 'Μεθοδολογία',
   clock_pointer:'Δείκτης Dubhe–Merak',
   },
   en: {
@@ -1715,6 +1727,10 @@ const LANG_DATA = {
     m_pa_title: '1. Position Angle',
     m_pa_text: 'The angle between two celestial bodies is computed using the spherical astronomy position-angle formula, where (α₁,δ₁) are the coordinates of Polaris and (α₂,δ₂) of Dubhe (right ascension and declination), and Δα = α₂ − α₁.',
     m_pa_note: 'The app uses atan2 for correct quadrant resolution (0°–360°).',
+    m_pa_symbols: 'Where α = right ascension and δ = declination — the two basic equatorial coordinates of any star.',
+    m_gmst_j2000: 'J2000.0 is the standard astronomical reference epoch: January 1, 2000, 12:00 UTC. D measures how many days have passed since this fixed reference moment until the time of calculation.',
+    m_error_general_note: 'The table below shows indicative, typical error magnitudes for the method in general — it is not recalculated within the app for each specific observation, since the actual angle-observation error is not known in advance.',
+
     m_gmst_title: '2. Greenwich Mean Sidereal Time (GMST)',
     m_gmst_text: 'Meeus\'s formula (Astronomical Algorithms) computes sidereal time at Greenwich from D (days since J2000.0) and T = D/36525 (Julian centuries).',
     m_gmst_note: 'The coefficient 360.98564736629°/day reflects the sidereal-to-solar day ratio (1.00273791 solar days per sidereal rotation).',
@@ -1734,9 +1750,8 @@ const LANG_DATA = {
     m_err_polaris: 'Polaris offset from celestial pole (~0.7°)',
     m_err_total: 'Total estimated error',
     m_error_rss_note: 'RSS: √(20² + 16² + 1² + 1²) ≈ 25.7 minutes. Independent error sources combine as the square root of the sum of squares, not additively.',
-    m_validation_title: '6. Field Validation',
-    m_validation_text: 'The method has been tested with real field observations (Kos, Greece) with results within the expected error range (±25 minutes) compared to actual clock time.',
     method_title: '📐 Theoretical Background',
+    method_title_short: 'Methodology',
   clock_pointer:'Dubhe–Merak pointer',
   }
 };
@@ -2881,19 +2896,17 @@ function renderMethodologyContent(){
   const el = document.getElementById('methodContent');
   if(!el) return;
 
-  // Ζωντανά νούμερα από τον τελευταίο υπολογισμό (αν υπάρχει)
-  const hasCalc = hourData && hourData.length > 0;
-  const sampleAngle = hasCalc ? hourData.find(h=>h.hour===currentHour).ccwDeg : 65;
-
   el.innerHTML = `
     <div class="method-section">
       <h3>${t('m_pa_title')}</h3>
       <p>${t('m_pa_text')}</p>
       <div class="formula-box">
-        PA = atan2( cos(δ<sub>2</sub>)·sin(Δα) ,
-        sin(δ<sub>2</sub>)·cos(δ<sub>1</sub>) − cos(δ<sub>2</sub>)·sin(δ<sub>1</sub>)·cos(Δα) )
+        PA = atan2( <span style="color:var(--gold);">y</span> , <span style="color:#4ecf8a;">x</span> )<br>
+        <span style="color:var(--gold);">y</span> = cos(δ<sub>2</sub>)·sin(Δα)<br>
+        <span style="color:#4ecf8a;">x</span> = sin(δ<sub>2</sub>)·cos(δ<sub>1</sub>) − cos(δ<sub>2</sub>)·sin(δ<sub>1</sub>)·cos(Δα)
       </div>
       <p style="font-size:.85rem;">${t('m_pa_note')}</p>
+      <p style="font-size:.85rem;">${t('m_pa_symbols')}</p>
     </div>
 
     <div class="method-section">
@@ -2902,6 +2915,7 @@ function renderMethodologyContent(){
       <div class="formula-box">
         GMST = 280.46061837 + 360.98564736629·D + 0.000387933·T² − T³⁄38710000
       </div>
+      <p style="font-size:.85rem;">${t('m_gmst_j2000')}</p>
       <p style="font-size:.85rem;">${t('m_gmst_note')}</p>
     </div>
 
@@ -2925,6 +2939,7 @@ function renderMethodologyContent(){
     <div class="method-section">
       <h3>${t('m_error_title')}</h3>
       <p>${t('m_error_text')}</p>
+      <p style="font-size:.82rem;font-style:italic;">${t('m_error_general_note')}</p>
       <table class="error-table">
         <tr><th>${t('m_err_source')}</th><th>${t('m_err_magnitude')}</th></tr>
         <tr><td>${t('m_err_angle')}</td><td>±5° → ±20 min</td></tr>
@@ -2934,11 +2949,6 @@ function renderMethodologyContent(){
         <tr><td>${t('m_err_total')}</td><td>≈ ±25 min (RSS)</td></tr>
       </table>
       <p style="font-size:.82rem;">${t('m_error_rss_note')}</p>
-    </div>
-
-    <div class="method-section">
-      <h3>${t('m_validation_title')}</h3>
-      <p>${t('m_validation_text')}</p>
     </div>
   `;
 }
@@ -3281,6 +3291,21 @@ function showMethodology(){
 function hideMethodology(){
   document.getElementById('methodOverlay').style.display = 'none';
 }
+
+function toggleUserMenu(){
+  const menu = document.getElementById('userMenuDropdown');
+  if(!menu) return;
+  const isOpen = menu.style.display === 'block';
+  menu.style.display = isOpen ? 'none' : 'block';
+}
+
+// Κλείσιμο dropdown όταν ο χρήστης κάνει κλικ έξω από αυτό
+document.addEventListener('click', function(e){
+  const badge = document.getElementById('userBadge');
+  const menu  = document.getElementById('userMenuDropdown');
+  if(!badge || !menu) return;
+  if(!badge.contains(e.target)) menu.style.display = 'none';
+});
 
 function deleteMyPin(){
   if(!currentUser){ alert('Πρέπει να είσαι συνδεδεμένος.'); return; }

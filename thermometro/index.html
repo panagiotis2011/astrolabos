@@ -139,6 +139,7 @@ input:focus{border-color:var(--gold2);}
 .chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;}
 .chip{background:#071625;border:1px solid var(--border);border-radius:20px;color:var(--text2);font-size:.84rem;padding:7px 14px;cursor:pointer;transition:.15s;}
 .chip:hover{border-color:var(--gold2);color:var(--gold);}
+.chip.active{border-color:var(--gold2);color:var(--gold);background:#0e2338;}
 
 /* ── BUTTONS ── */
 .btn{display:block;width:100%;padding:13px;border-radius:10px;font-family:'Cinzel',serif;font-size:1rem;font-weight:600;letter-spacing:.05em;cursor:pointer;transition:.2s;margin-top:18px;border:none;}
@@ -225,6 +226,27 @@ input:focus{border-color:var(--gold2);}
         <div class="stat-item"><div class="stat-lbl">Μετρήσεις</div><div class="stat-val" id="statCount">—</div></div>
       </div>
       <div class="chart-wrap"><canvas id="chartCanvas" height="260"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>Ημερήσιες ακραίες τιμές</span></div>
+    <div class="chip-row" style="margin-top:0;">
+      <div class="chip active" id="dailyMetricMaxChip" onclick="setDailyMetric('max')">Μέγιστη ημέρας</div>
+      <div class="chip" id="dailyMetricMinChip" onclick="setDailyMetric('min')">Ελάχιστη ημέρας</div>
+    </div>
+    <div class="date-row" style="margin-top:14px;">
+      <div><label class="field-label">Από</label><input type="datetime-local" id="dailyFromInput"></div>
+      <div><label class="field-label">Έως</label><input type="datetime-local" id="dailyToInput"></div>
+    </div>
+    <div class="chip-row">
+      <div class="chip" onclick="setDailyQuickRange('7d')">Τελευταία εβδομάδα</div>
+      <div class="chip" onclick="setDailyQuickRange('30d')">Τελευταίος μήνας</div>
+      <div class="chip" onclick="setDailyQuickRange('all')">Όλο το ιστορικό</div>
+    </div>
+    <button class="btn btn-primary" id="dailyAnalyzeBtn" onclick="analyzeDaily()">⟳ Εμφάνιση γραφήματος</button>
+    <div class="chart-wrap" id="dailyChartWrap" style="display:none;margin-top:18px;">
+      <canvas id="dailyChartCanvas" height="260"></canvas>
     </div>
   </div>
 
@@ -565,6 +587,8 @@ async function refreshSummary(){
     lastEl.textContent = formatTs(dbLastTs);
     if(!document.getElementById('fromInput').value) document.getElementById('fromInput').value = tsToDateLocalInput(dbFirstTs);
     if(!document.getElementById('toInput').value) document.getElementById('toInput').value = tsToDateLocalInput(dbLastTs);
+    if(!document.getElementById('dailyFromInput').value) document.getElementById('dailyFromInput').value = tsToDateLocalInput(dbFirstTs);
+    if(!document.getElementById('dailyToInput').value) document.getElementById('dailyToInput').value = tsToDateLocalInput(dbLastTs);
   }else{
     dbFirstTs = null; dbLastTs = null;
     firstEl.textContent = '—';
@@ -652,6 +676,154 @@ window.analyze = async function(){
     analyzeBtn.textContent = '⟳ Ανάλυση';
   }
 };
+
+// ══════════════════════════════════════
+// Daily max/min trend
+// ══════════════════════════════════════
+let dailyMetric = 'max';
+
+window.setDailyMetric = function(type){
+  dailyMetric = type;
+  document.getElementById('dailyMetricMaxChip').classList.toggle('active', type === 'max');
+  document.getElementById('dailyMetricMinChip').classList.toggle('active', type === 'min');
+};
+
+window.setDailyQuickRange = function(type){
+  if(!dbLastTs){ alert('Δεν υπάρχουν ακόμα αποθηκευμένες μετρήσεις.'); return; }
+  const lastTs = new Date(dbLastTs);
+  const firstTs = new Date(dbFirstTs);
+  let from, to = lastTs;
+  if(type === '7d') from = new Date(lastTs.getTime() - 7*24*3600*1000);
+  else if(type === '30d') from = new Date(lastTs.getTime() - 30*24*3600*1000);
+  else from = firstTs;
+  if(from < firstTs) from = firstTs;
+
+  document.getElementById('dailyFromInput').value = dateToLocalInputValue(from);
+  document.getElementById('dailyToInput').value = dateToLocalInputValue(to);
+  analyzeDaily();
+};
+
+window.analyzeDaily = async function(){
+  const fromVal = document.getElementById('dailyFromInput').value;
+  const toVal = document.getElementById('dailyToInput').value;
+  if(!fromVal || !toVal){ alert('Επίλεξε ημερομηνία/ώρα «Από» και «Έως».'); return; }
+
+  const btn = document.getElementById('dailyAnalyzeBtn');
+  btn.disabled = true;
+  btn.textContent = 'Φόρτωση...';
+
+  try{
+    const fromTs = fromVal + ':00';
+    const toTs = toVal + ':00';
+    const data = await getRange(fromTs, toTs);
+
+    if(!data.length){
+      document.getElementById('dailyChartWrap').style.display = 'none';
+      alert('Δεν βρέθηκαν μετρήσεις στο επιλεγμένο διάστημα.');
+      return;
+    }
+
+    const byDay = new Map();
+    data.forEach(d => {
+      const day = d.ts.slice(0, 10);
+      if(!byDay.has(day)) byDay.set(day, {max: d.temp, min: d.temp});
+      else{
+        const e = byDay.get(day);
+        if(d.temp > e.max) e.max = d.temp;
+        if(d.temp < e.min) e.min = d.temp;
+      }
+    });
+    const days = Array.from(byDay.keys()).sort();
+    const points = days.map(day => ({
+      label: day,
+      value: dailyMetric === 'max' ? byDay.get(day).max : byDay.get(day).min
+    }));
+
+    document.getElementById('dailyChartWrap').style.display = 'block';
+    drawDailyChart(points);
+  }finally{
+    btn.disabled = false;
+    btn.textContent = '⟳ Εμφάνιση γραφήματος';
+  }
+};
+
+function formatDayShort(day){
+  const [y, m, d] = day.split('-');
+  return `${d}/${m}`;
+}
+
+function drawDailyChart(points){
+  const canvas = document.getElementById('dailyChartCanvas');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const cssW = canvas.parentElement.clientWidth - 16;
+  const cssH = 240;
+
+  canvas.width = cssW * dpr;
+  canvas.height = cssH * dpr;
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  const pad = {left: 42, right: 12, top: 12, bottom: 26};
+  const w = cssW - pad.left - pad.right;
+  const h = cssH - pad.top - pad.bottom;
+
+  const values = points.map(p => p.value);
+  let vMax = Math.max(...values), vMin = Math.min(...values);
+  if(vMax === vMin){ vMax += 1; vMin -= 1; }
+  const margin = (vMax - vMin) * 0.12 || 1;
+  vMax += margin; vMin -= margin;
+
+  const n = points.length;
+  const xOf = i => pad.left + (n > 1 ? (i / (n-1)) * w : w/2);
+  const yOf = v => pad.top + h - ((v - vMin) / (vMax - vMin)) * h;
+
+  ctx.font = '11px Noto Sans, sans-serif';
+  ctx.fillStyle = '#90b8d8';
+  ctx.strokeStyle = 'rgba(30,58,90,0.7)';
+  ctx.lineWidth = 1;
+
+  const steps = 4;
+  for(let s = 0; s <= steps; s++){
+    const v = vMin + (vMax - vMin) * s / steps;
+    const yy = yOf(v);
+    ctx.beginPath();
+    ctx.setLineDash([3,3]);
+    ctx.moveTo(pad.left, yy);
+    ctx.lineTo(pad.left + w, yy);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.textAlign = 'right';
+    ctx.fillText(v.toFixed(1) + '°', pad.left - 6, yy + 4);
+  }
+
+  ctx.textAlign = 'center';
+  const labelIdx = n > 1 ? [0, Math.floor((n-1)/2), n-1] : [0];
+  labelIdx.forEach(idx => {
+    ctx.fillText(formatDayShort(points[idx].label), xOf(idx), cssH - 8);
+  });
+
+  const color = dailyMetric === 'max' ? '#ff9d6b' : '#6bb8ff';
+  ctx.beginPath();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  points.forEach((p, i) => {
+    const xx = xOf(i), yy = yOf(p.value);
+    if(i === 0) ctx.moveTo(xx, yy); else ctx.lineTo(xx, yy);
+  });
+  ctx.stroke();
+
+  if(n <= 60){
+    ctx.fillStyle = color;
+    points.forEach((p, i) => {
+      ctx.beginPath();
+      ctx.arc(xOf(i), yOf(p.value), 2, 0, Math.PI*2);
+      ctx.fill();
+    });
+  }
+}
 
 // ══════════════════════════════════════
 // Chart (canvas, no external deps)

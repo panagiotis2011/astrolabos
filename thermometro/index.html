@@ -378,6 +378,26 @@ async function debugExtractedText(file){
   }catch(e){ return 'debug error: ' + e.message; }
 }
 
+const DATE_PATTERNS = [
+  // DD-MM-YYYY HH:MM:SS  temp  (older report style, comma or dot decimal)
+  {
+    re: /(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2}):(\d{2})\s+(-?\d{1,3}[.,]\d)/g,
+    toReading: m => {
+      const [, dd, mm, yyyy, HH, MI, SS, tempStr] = m;
+      return {ts: `${yyyy}-${mm}-${dd}T${HH}:${MI}:${SS}`, temp: parseFloat(tempStr.replace(',', '.'))};
+    }
+  },
+  // YY/MM/DD or YYYY/MM/DD  HH:MM:SS  temp  (newer report style, dot decimal)
+  {
+    re: /(\d{2,4})\/(\d{2})\/(\d{2})\s+(\d{2}):(\d{2}):(\d{2})\s+(-?\d{1,3}[.,]\d)/g,
+    toReading: m => {
+      let [, yy, mm, dd, HH, MI, SS, tempStr] = m;
+      const yyyy = yy.length === 2 ? ('20' + yy) : yy;
+      return {ts: `${yyyy}-${mm}-${dd}T${HH}:${MI}:${SS}`, temp: parseFloat(tempStr.replace(',', '.'))};
+    }
+  }
+];
+
 async function parsePdfFile(file){
   const buf = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({data: buf}).promise;
@@ -388,21 +408,21 @@ async function parsePdfFile(file){
   }
 
   const deviceInfo = {};
-  const snMatch = fullText.match(/S\/N:\s*([A-Za-z0-9]+)/);
-  const modelMatch = fullText.match(/Model:\s*([A-Za-z0-9+\-]+)/);
+  const snMatch = fullText.match(/Serial Number\s*:?\s*([A-Za-z0-9]+)/) || fullText.match(/S\/N:\s*([A-Za-z0-9]+)/);
+  const modelMatch = fullText.match(/Probe Type\s*:?\s*([A-Za-z0-9()+\-]+)/) || fullText.match(/Model:\s*([A-Za-z0-9+\-]+)/);
   if(snMatch) deviceInfo.sn = snMatch[1];
   if(modelMatch) deviceInfo.model = modelMatch[1];
 
-  const re = /(\d{2})-(\d{2})-(\d{4})\s+(\d{2}):(\d{2}):(\d{2})\s+(-?\d{1,3}[.,]\d)/g;
-  const readings = [];
-  let m;
-  while((m = re.exec(fullText)) !== null){
-    const [, dd, mm, yyyy, HH, MI, SS, tempStr] = m;
-    const ts = `${yyyy}-${mm}-${dd}T${HH}:${MI}:${SS}`;
-    const temp = parseFloat(tempStr.replace(',', '.'));
-    if(!isNaN(temp)) readings.push({ts, temp});
+  const byTs = new Map();
+  for(const pattern of DATE_PATTERNS){
+    let m;
+    pattern.re.lastIndex = 0;
+    while((m = pattern.re.exec(fullText)) !== null){
+      const reading = pattern.toReading(m);
+      if(!isNaN(reading.temp)) byTs.set(reading.ts, reading);
+    }
   }
-  return {readings, deviceInfo};
+  return {readings: Array.from(byTs.values()), deviceInfo};
 }
 
 // ══════════════════════════════════════

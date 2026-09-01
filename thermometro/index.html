@@ -167,8 +167,13 @@ input:focus{border-color:var(--gold2);}
 .stat-val.min{color:#6bb8ff;}
 
 /* ── CHART ── */
-.chart-wrap{margin-top:18px;background:#071625;border:1px solid var(--border);border-radius:10px;padding:12px 8px 6px;}
+.chart-wrap{margin-top:18px;background:#071625;border:1px solid var(--border);border-radius:10px;padding:12px 8px 6px;position:relative;}
 #chartCanvas{width:100%;display:block;}
+.chart-tooltip{
+  position:absolute;display:none;background:#0b1c30;border:1px solid var(--gold2);color:var(--gold);
+  font-size:.78rem;padding:4px 9px;border-radius:6px;pointer-events:none;white-space:nowrap;
+  z-index:5;box-shadow:0 2px 10px rgba(0,0,0,.45);
+}
 
 .empty-note{color:var(--text2);font-size:.9rem;text-align:center;padding:8px 4px;}
 .sync-note{color:var(--text2);font-size:.78rem;text-align:center;margin-top:10px;}
@@ -225,7 +230,7 @@ input:focus{border-color:var(--gold2);}
         <div class="stat-item"><div class="stat-lbl">Μέση</div><div class="stat-val" id="statAvg">—</div></div>
         <div class="stat-item"><div class="stat-lbl">Μετρήσεις</div><div class="stat-val" id="statCount">—</div></div>
       </div>
-      <div class="chart-wrap"><canvas id="chartCanvas" height="260"></canvas></div>
+      <div class="chart-wrap"><canvas id="chartCanvas" height="260"></canvas><div class="chart-tooltip" id="resultsChartTooltip"></div></div>
     </div>
   </div>
 
@@ -247,6 +252,7 @@ input:focus{border-color:var(--gold2);}
     <button class="btn btn-primary" id="dailyAnalyzeBtn" onclick="analyzeDaily()">⟳ Εμφάνιση γραφήματος</button>
     <div class="chart-wrap" id="dailyChartWrap" style="display:none;margin-top:18px;">
       <canvas id="dailyChartCanvas" height="260"></canvas>
+      <div class="chart-tooltip" id="dailyChartTooltip"></div>
     </div>
   </div>
 
@@ -670,6 +676,7 @@ window.analyze = async function(){
     document.getElementById('statCount').textContent = data.length.toLocaleString('el-GR');
     document.getElementById('results').style.display = 'block';
 
+    lastResultsData = data;
     drawChart(data);
   }finally{
     analyzeBtn.disabled = false;
@@ -739,6 +746,7 @@ window.analyzeDaily = async function(){
       value: dailyMetric === 'max' ? byDay.get(day).max : byDay.get(day).min
     }));
 
+    lastDailyPoints = points;
     document.getElementById('dailyChartWrap').style.display = 'block';
     drawDailyChart(points);
   }finally{
@@ -751,6 +759,13 @@ function formatDayShort(day){
   const [y, m, d] = day.split('-');
   return `${d}/${m}`;
 }
+function formatDayFull(day){
+  const [y, m, d] = day.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+let lastDailyPoints = null;
+let dailyChartState = null;
 
 function drawDailyChart(points){
   const canvas = document.getElementById('dailyChartCanvas');
@@ -823,11 +838,19 @@ function drawDailyChart(points){
       ctx.fill();
     });
   }
+
+  dailyChartState = {
+    cssW, cssH, top: pad.top, bottom: cssH - pad.bottom,
+    coords: points.map((p, i) => ({x: xOf(i), y: yOf(p.value), label: p.label, value: p.value}))
+  };
 }
 
 // ══════════════════════════════════════
 // Chart (canvas, no external deps)
 // ══════════════════════════════════════
+let lastResultsData = null;
+let resultsChartState = null;
+
 function drawChart(data){
   const canvas = document.getElementById('chartCanvas');
   const ctx = canvas.getContext('2d');
@@ -898,7 +921,76 @@ function drawChart(data){
       ctx.fill();
     });
   }
+
+  resultsChartState = {
+    cssW, cssH, top: pad.top, bottom: cssH - pad.bottom,
+    coords: data.map((d, i) => ({x: xOf(i), y: yOf(d.temp), label: d.ts, value: d.temp}))
+  };
 }
+
+// ══════════════════════════════════════
+// Hover tooltips (mouse + touch)
+// ══════════════════════════════════════
+function attachHoverTooltip(canvasId, tooltipId, getState, redraw, formatLabel){
+  const canvas = document.getElementById(canvasId);
+  const tooltip = document.getElementById(tooltipId);
+
+  function showAt(clientX, clientY){
+    const state = getState();
+    if(!state || !state.coords || !state.coords.length) return;
+    const rect = canvas.getBoundingClientRect();
+    const mx = clientX - rect.left;
+
+    let nearest = state.coords[0], nd = Infinity;
+    state.coords.forEach(c => {
+      const d = Math.abs(c.x - mx);
+      if(d < nd){ nd = d; nearest = c; }
+    });
+
+    redraw();
+    const ctx = canvas.getContext('2d');
+    ctx.save();
+    ctx.strokeStyle = 'rgba(240,192,96,0.55)';
+    ctx.setLineDash([3,3]);
+    ctx.beginPath();
+    ctx.moveTo(nearest.x, state.top);
+    ctx.lineTo(nearest.x, state.bottom);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.fillStyle = '#fff8e8';
+    ctx.arc(nearest.x, nearest.y, 4.5, 0, Math.PI*2);
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#f0c060';
+    ctx.stroke();
+    ctx.restore();
+
+    tooltip.textContent = `${formatLabel(nearest.label)} · ${nearest.value.toFixed(1)}°C`;
+    tooltip.style.display = 'block';
+    tooltip.style.left = '0px';
+    tooltip.style.top = '0px';
+    const tw = tooltip.offsetWidth;
+    let left = nearest.x + 12;
+    if(left + tw > state.cssW - 4) left = nearest.x - tw - 12;
+    tooltip.style.left = Math.max(4, left) + 'px';
+    tooltip.style.top = Math.max(2, nearest.y - 32) + 'px';
+  }
+
+  function hide(){
+    tooltip.style.display = 'none';
+    redraw();
+  }
+
+  canvas.addEventListener('mousemove', e => showAt(e.clientX, e.clientY));
+  canvas.addEventListener('mouseleave', hide);
+  canvas.addEventListener('touchstart', e => { if(e.touches[0]) showAt(e.touches[0].clientX, e.touches[0].clientY); }, {passive: true});
+  canvas.addEventListener('touchmove', e => { if(e.touches[0]) showAt(e.touches[0].clientX, e.touches[0].clientY); }, {passive: true});
+  canvas.addEventListener('touchend', hide);
+}
+
+attachHoverTooltip('dailyChartCanvas', 'dailyChartTooltip', () => dailyChartState, () => { if(lastDailyPoints) drawDailyChart(lastDailyPoints); }, formatDayFull);
+attachHoverTooltip('chartCanvas', 'resultsChartTooltip', () => resultsChartState, () => { if(lastResultsData) drawChart(lastResultsData); }, formatTs);
 </script>
 </body>
 </html>

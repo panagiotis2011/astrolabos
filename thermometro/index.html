@@ -292,7 +292,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-auth.js";
 import {
   getFirestore, collection, doc, setDoc, getDoc, getDocs,
-  query, where, orderBy, limit, writeBatch, getCountFromServer
+  query, where, orderBy, limit, writeBatch
 } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -311,8 +311,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const READINGS = 'thermoReadings';
+const LEGACY_READINGS = 'thermoReadings'; // παλιά δομή: ένα έγγραφο ανά μέτρηση (δεν χρησιμοποιείται πια)
+const DAYS = 'thermoDays';                // νέα δομή: ένα έγγραφο ανά ημέρα
 const META = 'thermoMeta';
+const SUMMARY_DOC = 'summary';
 
 function ensureAuth(){
   return new Promise((resolve, reject) => {
@@ -369,14 +371,16 @@ async function extractPageText(page){
   // then join within a line using the actual horizontal gap so that
   // digit-by-digit rendered numbers (common in tabular PDF reports)
   // don't get spurious spaces inserted between characters.
+  // Sorting by y first and grouping sequentially is O(n log n); the earlier
+  // linear search per item became very slow on large reports.
+  items.sort((a, b) => b.transform[5] - a.transform[5]);
   const buckets = [];
+  let cur = null;
   items.forEach(it => {
     const y = it.transform[5];
-    let bucket = buckets.find(b => Math.abs(b.y - y) < 2.5);
-    if(!bucket){ bucket = {y, items: []}; buckets.push(bucket); }
-    bucket.items.push(it);
+    if(!cur || Math.abs(cur.y - y) >= 2.5){ cur = {y, items: []}; buckets.push(cur); }
+    cur.items.push(it);
   });
-  buckets.sort((a, b) => b.y - a.y);
   const lines = buckets.map(b => {
     const sorted = b.items.slice().sort((a, c) => a.transform[4] - c.transform[4]);
     let line = '';
@@ -426,14 +430,20 @@ const DATE_PATTERNS = [
   }
 ];
 
-async function parsePdfFile(file){
+async function parsePdfFile(file, onProgress){
   const buf = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({data: buf}).promise;
-  let fullText = '';
+  const parts = [];
   for(let i = 1; i <= pdf.numPages; i++){
+    if(onProgress){
+      onProgress(i, pdf.numPages);
+      await new Promise(r => setTimeout(r, 0)); // αφήνει τον browser να ενημερώσει την οθόνη
+    }
     const page = await pdf.getPage(i);
-    fullText += await extractPageText(page) + '\n';
+    parts.push(await extractPageText(page));
+    page.cleanup();
   }
+  const fullText = parts.join('\n') + '\n';
 
   const deviceInfo = {};
   const snMatch = fullText.match(/Serial Number\s*:?\s*([A-Za-z0-9]+)/) || fullText.match(/S\/N:\s*([A-Za-z0-9]+)/);
@@ -456,15 +466,51 @@ async function parsePdfFile(file){
 // ══════════════════════════════════════
 // Firestore read/write
 // ══════════════════════════════════════
+// Κάθε ημέρα αποθηκεύεται σε ΕΝΑ έγγραφο: {day: '2026-08-28', r: {'220518': 33.9, ...}}
+// (κλειδί = ώρα HHMMSS). Με merge:true οι υπάρχουσες μετρήσεις δεν χάνονται και οι
+// διπλές απλώς αντικαθίστανται, χωρίς να χρειάζεται να διαβάσουμε πρώτα τη βάση.
+function tsFromDayKey(day, key){
+  return `${day}T${key.slice(0,2)}:${key.slice(2,4)}:${key.slice(4,6)}`;
+}
+
 async function putReadings(readings){
-  for(let i = 0; i < readings.length; i += 450){
-    const chunk = readings.slice(i, i + 450);
+  const byDay = new Map();
+  readings.forEach(r => {
+    const day = r.ts.slice(0, 10);
+    const key = r.ts.slice(11).replace(/:/g, '');
+    if(!byDay.has(day)) byDay.set(day, {});
+    byDay.get(day)[key] = r.temp;
+  });
+  const entries = Array.from(byDay.entries());
+  for(let i = 0; i < entries.length; i += 400){
     const batch = writeBatch(db);
-    chunk.forEach(r => {
-      batch.set(doc(db, READINGS, r.ts), {ts: r.ts, temp: r.temp});
+    entries.slice(i, i + 400).forEach(([day, r]) => {
+      batch.set(doc(db, DAYS, day), {day, r}, {merge: true});
     });
     await batch.commit();
   }
+  return entries.length;
+}
+
+// Υπολογίζει πλήθος/πρώτη/τελευταία μέτρηση και τα αποθηκεύει σε ένα μικρό έγγραφο,
+// ώστε το άνοιγμα της σελίδας να κοστίζει μία μόνο ανάγνωση.
+async function recomputeSummary(){
+  const snap = await getDocs(query(collection(db, DAYS), orderBy('day', 'asc')));
+  let count = 0, first = null, last = null;
+  snap.docs.forEach(d => {
+    const data = d.data();
+    const keys = Object.keys(data.r || {});
+    if(!keys.length) return;
+    keys.sort();
+    count += keys.length;
+    const f = tsFromDayKey(data.day, keys[0]);
+    const l = tsFromDayKey(data.day, keys[keys.length - 1]);
+    if(first === null || f < first) first = f;
+    if(last === null || l > last) last = l;
+  });
+  const summary = {count, first, last};
+  await setDoc(doc(db, META, SUMMARY_DOC), summary);
+  return summary;
 }
 
 async function saveDeviceInfo(info){
@@ -477,20 +523,35 @@ async function loadDeviceInfo(){
 }
 
 async function getRange(fromTs, toTs){
-  const q = query(collection(db, READINGS),
-    where('ts', '>=', fromTs), where('ts', '<=', toTs), orderBy('ts', 'asc'));
+  const q = query(collection(db, DAYS),
+    where('day', '>=', fromTs.slice(0, 10)), where('day', '<=', toTs.slice(0, 10)), orderBy('day', 'asc'));
   const snap = await getDocs(q);
-  return snap.docs.map(d => d.data());
+  const out = [];
+  snap.docs.forEach(d => {
+    const data = d.data();
+    Object.keys(data.r || {}).forEach(key => {
+      const ts = tsFromDayKey(data.day, key);
+      if(ts >= fromTs && ts <= toTs) out.push({ts, temp: data.r[key]});
+    });
+  });
+  out.sort((a, b) => a.ts < b.ts ? -1 : (a.ts > b.ts ? 1 : 0));
+  return out;
 }
 
-async function clearAllReadings(){
-  const snap = await getDocs(collection(db, READINGS));
+async function deleteCollection(name){
+  const snap = await getDocs(collection(db, name));
   const refs = snap.docs.map(d => d.ref);
   for(let i = 0; i < refs.length; i += 450){
     const batch = writeBatch(db);
     refs.slice(i, i + 450).forEach(ref => batch.delete(ref));
     await batch.commit();
   }
+}
+
+async function clearAllReadings(){
+  await deleteCollection(DAYS);
+  await deleteCollection(LEGACY_READINGS); // καθαρίζει και τις παλιές εγγραφές ανά μέτρηση
+  await setDoc(doc(db, META, SUMMARY_DOC), {count: 0, first: null, last: null});
 }
 
 // ══════════════════════════════════════
@@ -524,14 +585,17 @@ async function handleFiles(fileList){
     importStatus.innerHTML = '<span class="err">Δεν βρέθηκε αρχείο PDF.</span>';
     return;
   }
-  importStatus.textContent = 'Επεξεργασία και αποστολή...';
+  importStatus.textContent = 'Επεξεργασία...';
   let totalNew = 0;
   let lastDevice = null;
   let anyZero = false;
   for(const file of files){
     try{
-      const {readings, deviceInfo} = await parsePdfFile(file);
+      const {readings, deviceInfo} = await parsePdfFile(file, (p, n) => {
+        importStatus.textContent = `«${file.name}»: ανάγνωση σελίδας ${p} από ${n}...`;
+      });
       if(readings.length){
+        importStatus.textContent = `«${file.name}»: αποστολή ${readings.length.toLocaleString('el-GR')} μετρήσεων...`;
         await putReadings(readings);
         totalNew += readings.length;
       }else{
@@ -546,6 +610,10 @@ async function handleFiles(fileList){
     }
   }
   if(lastDevice) await saveDeviceInfo(lastDevice);
+  if(totalNew > 0){
+    importStatus.textContent = 'Ενημέρωση σύνοψης...';
+    await recomputeSummary();
+  }
   if(totalNew === 0){
     importStatus.innerHTML = '<span class="err">Δεν εντοπίστηκαν εγγραφές στο PDF. Η μορφή του πίνακα μπορεί να διαφέρει — άνοιξε την κονσόλα του browser (F12) και στείλε μου ό,τι εμφανίζεται, ή στείλε μου ξανά το PDF.</span>';
   }else if(anyZero){
@@ -577,18 +645,17 @@ function formatTsShort(ts){
 }
 
 async function refreshSummary(){
-  const countSnap = await getCountFromServer(collection(db, READINGS));
-  const total = countSnap.data().count;
+  const summarySnap = await getDoc(doc(db, META, SUMMARY_DOC));
+  const summary = summarySnap.exists() ? summarySnap.data() : await recomputeSummary();
+  const total = summary.count || 0;
   document.getElementById('sumCount').textContent = total.toLocaleString('el-GR');
 
   const firstEl = document.getElementById('sumFirst');
   const lastEl = document.getElementById('sumLast');
 
   if(total > 0){
-    const firstSnap = await getDocs(query(collection(db, READINGS), orderBy('ts','asc'), limit(1)));
-    const lastSnap = await getDocs(query(collection(db, READINGS), orderBy('ts','desc'), limit(1)));
-    dbFirstTs = firstSnap.docs[0].data().ts;
-    dbLastTs = lastSnap.docs[0].data().ts;
+    dbFirstTs = summary.first;
+    dbLastTs = summary.last;
     firstEl.textContent = formatTs(dbFirstTs);
     lastEl.textContent = formatTs(dbLastTs);
     if(!document.getElementById('fromInput').value) document.getElementById('fromInput').value = tsToDateLocalInput(dbFirstTs);
@@ -656,7 +723,7 @@ window.analyze = async function(){
 
   try{
     const fromTs = fromVal + ':00';
-    const toTs = toVal + ':00';
+    const toTs = toVal + ':59';
     const data = await getRange(fromTs, toTs);
 
     if(!data.length){
@@ -665,10 +732,13 @@ window.analyze = async function(){
       return;
     }
 
-    const temps = data.map(d => d.temp);
-    const max = Math.max(...temps);
-    const min = Math.min(...temps);
-    const avg = temps.reduce((a,b) => a+b, 0) / temps.length;
+    let max = -Infinity, min = Infinity, sumT = 0;
+    for(const d of data){
+      if(d.temp > max) max = d.temp;
+      if(d.temp < min) min = d.temp;
+      sumT += d.temp;
+    }
+    const avg = sumT / data.length;
 
     document.getElementById('statMax').textContent = max.toFixed(1) + '°C';
     document.getElementById('statMin').textContent = min.toFixed(1) + '°C';
@@ -721,7 +791,7 @@ window.analyzeDaily = async function(){
 
   try{
     const fromTs = fromVal + ':00';
-    const toTs = toVal + ':00';
+    const toTs = toVal + ':59';
     const data = await getRange(fromTs, toTs);
 
     if(!data.length){
@@ -869,8 +939,11 @@ function drawChart(data){
   const w = cssW - pad.left - pad.right;
   const h = cssH - pad.top - pad.bottom;
 
-  const temps = data.map(d => d.temp);
-  let tMax = Math.max(...temps), tMin = Math.min(...temps);
+  let tMax = -Infinity, tMin = Infinity;
+  for(const d of data){
+    if(d.temp > tMax) tMax = d.temp;
+    if(d.temp < tMin) tMin = d.temp;
+  }
   if(tMax === tMin){ tMax += 1; tMin -= 1; }
   const margin = (tMax - tMin) * 0.12 || 1;
   tMax += margin; tMin -= margin;

@@ -177,6 +177,8 @@ input:focus{border-color:var(--gold2);}
 
 .empty-note{color:var(--text2);font-size:.9rem;text-align:center;padding:8px 4px;}
 .sync-note{color:var(--text2);font-size:.78rem;text-align:center;margin-top:10px;}
+.logout-link{margin-top:12px;background:none;border:1px solid var(--border);border-radius:16px;color:var(--text2);font-family:'Noto Sans',sans-serif;font-size:.8rem;padding:5px 14px;cursor:pointer;transition:.15s;}
+.logout-link:hover{border-color:var(--gold2);color:var(--gold);}
 .sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:5px;}
 </style>
 </head>
@@ -202,6 +204,7 @@ input:focus{border-color:var(--gold2);}
   <span class="icon">🌡️</span>
   <h1>Η μέτρηση της θερμοκρασίας</h1>
   <p class="subtitle">Καταγραφές από Elitech RC-5+ · ανάλυση & ιστορικό</p>
+  <button type="button" class="logout-link" onclick="logoutApp()">Έξοδος</button>
 </header>
 
 <div class="page">
@@ -347,6 +350,11 @@ gateForm.addEventListener('submit', e => {
     gatePassword.focus();
   }
 });
+
+window.logoutApp = function(){
+  localStorage.removeItem('thermoAuthed');
+  location.reload();
+};
 
 async function unlockApp(){
   gateOverlay.style.display = 'none';

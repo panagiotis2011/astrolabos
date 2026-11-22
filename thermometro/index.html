@@ -612,7 +612,12 @@ async function handleFiles(fileList){
   if(lastDevice) await saveDeviceInfo(lastDevice);
   if(totalNew > 0){
     importStatus.textContent = 'Ενημέρωση σύνοψης...';
-    await recomputeSummary();
+    try{
+      await recomputeSummary();
+    }catch(err){
+      importStatus.innerHTML = `<span class="err">Οι μετρήσεις αποθηκεύτηκαν, αλλά η ενημέρωση της σύνοψης απέτυχε: ${err.message}</span>`;
+      return;
+    }
   }
   if(totalNew === 0){
     importStatus.innerHTML = '<span class="err">Δεν εντοπίστηκαν εγγραφές στο PDF. Η μορφή του πίνακα μπορεί να διαφέρει — άνοιξε την κονσόλα του browser (F12) και στείλε μου ό,τι εμφανίζεται, ή στείλε μου ξανά το PDF.</span>';
@@ -646,7 +651,12 @@ function formatTsShort(ts){
 
 async function refreshSummary(){
   const summarySnap = await getDoc(doc(db, META, SUMMARY_DOC));
-  const summary = summarySnap.exists() ? summarySnap.data() : await recomputeSummary();
+  let summary = summarySnap.exists() ? summarySnap.data() : null;
+  // Αν η σύνοψη λείπει ή δείχνει 0 μετρήσεις, την ξαναϋπολογίζουμε από τις ημέρες που
+  // υπάρχουν πραγματικά στη βάση (αν η βάση είναι άδεια, δεν διαβάζεται τίποτα).
+  if(!summary || !(summary.count > 0) || !summary.first || !summary.last){
+    summary = await recomputeSummary();
+  }
   const total = summary.count || 0;
   document.getElementById('sumCount').textContent = total.toLocaleString('el-GR');
 
@@ -697,6 +707,7 @@ function dateToLocalInputValue(d){
 }
 
 window.setQuickRange = async function(type){
+  if(!dbLastTs) await refreshSummary();
   if(!dbLastTs){ alert('Δεν υπάρχουν ακόμα αποθηκευμένες μετρήσεις.'); return; }
   const lastTs = new Date(dbLastTs);
   const firstTs = new Date(dbFirstTs);
@@ -765,7 +776,8 @@ window.setDailyMetric = function(type){
   document.getElementById('dailyMetricMinChip').classList.toggle('active', type === 'min');
 };
 
-window.setDailyQuickRange = function(type){
+window.setDailyQuickRange = async function(type){
+  if(!dbLastTs) await refreshSummary();
   if(!dbLastTs){ alert('Δεν υπάρχουν ακόμα αποθηκευμένες μετρήσεις.'); return; }
   const lastTs = new Date(dbLastTs);
   const firstTs = new Date(dbFirstTs);
